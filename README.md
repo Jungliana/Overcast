@@ -3,9 +3,7 @@
 Text adventure for PARP.
 
 Welcome to ‘Overcast’! You are Vetero, the Weather Mage. 
-
 The time has come for your final trial - you must travel 
-
 through the Gardens of Bloom, full of dangers and puzzles. 
 
 You have three wands: 
