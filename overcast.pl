@@ -1,47 +1,82 @@
 /* Overcast, by AAP. */
 
-:- dynamic i_am_at/1, at/2, holding/1.
-:- retractall(at(_, _)), retractall(i_am_at(_)), retractall(alive(_)).
+:- dynamic started/0.
+:- dynamic i_am_at/1, at/2.
+:- dynamic in_inventory/1.          % Status for objects in inventory.
+:- dynamic wet/1, frozen/1, hot/1.  % Statuses from spells.
 
-i_am_at(someplace).
+:- retractall(started).
+:- retractall(at(_, _)), retractall(i_am_at(_)), retractall(in_inventory(_)).
+:- retractall(wet(_)), retractall(frozen(_)), retractall(hot(_)).
 
-path(someplace, n, someplace).
 
-at(thing, someplace).
+/* ------- Paths --------- */
+path(entrance, n, box_location).
+path(box_location, s, entrance).
 
-/* These rules describe how to pick up an object. */
+/* -------- Objects in locations -------- */
+at(blue_bowl, entrance).
+at(red_bowl, entrance).
+at(white_bowl, entrance).
+at(green_bowl, entrance).
+at(golden_ring, entrance).
+at(box, box_location).
 
-take(X) :-
-        holding(X),
-        write('You''re already holding it!'),
+/* ------- Immovable objects ------------ */
+heavy(box).
+heavy(blue_bowl).
+heavy(red_bowl).
+heavy(white_bowl).
+heavy(green_bowl).
+
+/* --------- Describing places and objects ----------- */
+describe(entrance) :- write('You are standing before an entrance to the Gardens.'), !, nl.
+describe(X) :- write('It looks like... a '), write(X), write('.'), !, nl.
+
+/* ---------- Take item ---------- */
+take(Item) :-
+        in_inventory(Item),
+        write('This item is already in your inventory!'),
         !, nl.
+
+take(Item) :-
+        heavy(Item),
+        write('This object is too heavy!'),
+        !, nl.
+
+take(golden_ring) :-
+        i_am_at(entrance),
+        at(golden_ring, entrance),
+        retractall(at(golden_ring, entrance)),
+        assert(in_inventory(golden_ring)),
+        write('Nice find!'), !, nl.
 
 take(X) :-
         i_am_at(Place),
         at(X, Place),
-        retract(at(X, Place)),
-        assert(holding(X)),
-        write('OK.'),
+        retractall(at(X, Place)),
+        assert(in_inventory(X)),
+        write('The '), write(X), write(' is now in your inventory.'),
         !, nl.
 
 take(_) :-
         write('I don''t see it here.'),
         nl.
 
+/* Inventory */
+i :-
+        in_inventory(Item),
+        write(Item), write(','), fail.
 
-/* These rules describe how to put down an object. */
+i :-
+        write(' *end of inventory*.').
 
-drop(X) :-
-        holding(X),
-        i_am_at(Place),
-        retract(holding(X)),
-        assert(at(X, Place)),
-        write('OK.'),
-        !, nl.
+inventory :-
+        in_inventory(Item),
+        write(Item), write(','), fail.
 
-drop(_) :-
-        write('You aren''t holding it!'),
-        nl.
+inventory :-
+        write(' *end of inventory*.').
 
 
 /* These rules define the direction letters as calls to go/1. */
@@ -53,7 +88,6 @@ s :- go(s).
 e :- go(e).
 
 w :- go(w).
-
 
 /* This rule tells how to move in a given direction. */
 
@@ -77,7 +111,6 @@ look :-
         notice_objects_at(Place),
         nl.
 
-
 /* These rules set up a loop to mention all the objects
    in your vicinity. */
 
@@ -88,12 +121,101 @@ notice_objects_at(Place) :-
 
 notice_objects_at(_).
 
+examine(X) :-
+        i_am_at(Place),
+        at(X, Place),
+        describe(X),
+        print_status(X), !.
+
+print_status(X) :-
+        wet(X), write('The '), write(X), write(' is wet.'), !, nl.
+
+print_status(X) :-
+        frozen(X), write('The '), write(X), write(' is frozen.'), !, nl.
+
+print_status(X) :-
+        hot(X), write('The '), write(X), write(' is hot.'), !, nl.
+
+print_status(_) :-
+        !, nl.
+
+/* ------- All spell casts -------- */
+
+% Not sure whether necessary
+cast(_, X) :-
+        in_inventory(X),
+        write('You cannot use spells on items inside your inventory!'), !, nl.
+
+/* rain spell section */
+cast(rain, X) :-
+        i_am_at(Place),
+        at(X, Place),
+        hot(X),
+        retractall(hot(X)),
+        write('The '), write(X), write(' is no longer hot.'), !, nl.
+
+cast(rain, X) :-
+        i_am_at(Place),
+        at(X, Place),
+        frozen(X),
+        retractall(frozen(X)),
+        write('The '), write(X), write(' is no longer frozen.'), !, nl.
+
+cast(rain, X) :-
+        i_am_at(Place),
+        at(X, Place),
+        assert(wet(X)),
+        write('The '), write(X), write(' is wet because of rain.'), !, nl.
+
+/* sunbeam spell section */
+cast(sunbeam, X) :-
+        i_am_at(Place),
+        at(X, Place),
+        wet(X),
+        retractall(wet(X)),
+        write('The '), write(X), write(' is no longer wet.'), !, nl.
+
+cast(sunbeam, X) :-
+        i_am_at(Place),
+        at(X, Place),
+        frozen(X),
+        retractall(frozen(X)),
+        write('The '), write(X), write(' is no longer frozen.'), !, nl.
+
+cast(sunbeam, X) :-
+        i_am_at(Place),
+        at(X, Place),
+        assert(hot(X)),
+        write('The '), write(X), write(' is now hot.'), !, nl.
+
+/* frost spell section */
+cast(frost, X) :-
+        i_am_at(Place),
+        at(X, Place),
+        hot(X),
+        retractall(hot(X)),
+        write('The '), write(X), write(' is no longer hot.'), !, nl.
+
+cast(frost, X) :-
+        i_am_at(Place),
+        at(X, Place),
+        assert(frozen(X)),
+        retractall(wet(X)),
+        write('The '), write(X), write(' is now frozen.'), !, nl.
+
+/* wrong usage section */
+cast(tp, _) :-
+        write('Teleportation... coming soon in a DLC.'), !, nl.
+
+cast(_, _) :-
+        write('It doesn''t work!'), !, nl.
+
+
 
 /* This rule tells how to die. */
 
 die :-
         finish.
-
 
 /* Under UNIX, the "halt." command quits Prolog but does not
    remove the output window. On a PC, however, the window
@@ -125,27 +247,47 @@ instructions :-
         write('Rules of the adventure:'), nl,
         write('start.             -- to start the game.'), nl,
         write('n.  s.  e.  w.     -- to go in that direction.'), nl,
-        write('take(Object).      -- to pick up an object.'), nl,
-        write('drop(Object).      -- to put down an object.'), nl,
+        write('take(item).        -- to pick up an item and place it in your inventory.'), nl,
         write('look.              -- to look around you again.'), nl,
-        write('use(Obj, otherObj) -- to use an object from your inventory on another object.'), nl,
-        write('cast(rain/sunbeam/frost, Object) -- to use one of your wands on the chosen object.'), nl,
+        write('use(item, other)   -- to use an item from your inventory on another object.'), nl,
+        write('cast(rain/sunbeam/frost, object) -- to use one of your wands on the chosen object.'), nl,
         write('map.               -- to show a map.'), nl,
         write('mana.              -- to show your mana usage.'), nl, 
         write('instructions.      -- to see this message again.'), nl,
         write('halt.              -- to end the game and quit.'), nl,
         nl.
 
-
-/* This rule prints out instructions and tells where you are. */
+start :-
+        started,
+        write('You''ve already started your trial, Vetero!'), !, nl.
 
 start :-
+        assert(started),
         introduction,
         instructions,
+        assert(i_am_at(entrance)),
         look.
 
-/* These rules describe the various rooms.  Depending on
-   circumstances, a room may have more than one description. */
 
-describe(someplace) :- write('You are someplace.'), nl.
-
+/* Map */
+map :-
+        write('    _________________________^_^_^_^_^_^_^_^_^_'), nl,
+        write('   (~~~)       /       :    |                 |'), nl,
+        write('  (~~~~)      /        :    |             [_] |'), nl,
+        write('  ( ~~~~)    [x]            |                 |'), nl,
+        write('( ~~~~~~)     |             |--------  -------|'), nl,
+        write('(~~~~~~~~)    |             |  \\_/       \\_/  |'), nl,
+        write('  (~~~~~~~~)--|-----[ ]-----|                 |'), nl,
+        write(' / (~~~~~~)   |             |                 |'), nl,
+        write('|     (~~~)   |             |      START      |'), nl,
+        write('|             |            [x]                |'), nl,
+        write('|             |             |                 |'), nl,
+        write('|             \\        :    |  \\_/       \\_/  |'), nl,
+        write('|              \\_______:____|_________________|'), nl,
+        write('|                    |                        |'), nl,
+        write('|                    |       O                |'), nl,
+        write('|                   [x]     /0\\               |'), nl,
+        write('\\                    |      / \\               |'), nl,
+        write(' \\___________________|____________[--]________|'), nl,
+        write('                                  |  |'), nl,
+        write('                                  |  |'), nl.
