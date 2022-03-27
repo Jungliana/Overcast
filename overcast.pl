@@ -16,6 +16,7 @@
 path(entrance, n, box_location).
 path(box_location, s, entrance).
 path(entrance, w, fountain1).
+path(fountain1, e, entrance).
 
 /* -------- Objects in locations -------- */
 /* Room Z1 (entrance) */
@@ -135,6 +136,15 @@ w :- go(w).
 go(w) :-                   % From entrance to first of twin rooms
         i_am_at(entrance),
         locked(gate),
+        can_be_unlocked(gate),
+        retractall(locked(gate)),
+        tty_clear,
+        write('The gate opens, inviting you to enter the Gardens.'), nl,
+        write('You go through it and get to the next place.'), nl, fail.
+
+go(w)  :-
+        i_am_at(entrance),
+        locked(gate),
         write('The gate is locked. You have to find a way to open it!'), !, nl.
 
 go(Direction) :-
@@ -166,6 +176,13 @@ notice_objects_at(Place) :-
         fail.
 
 notice_objects_at(_).
+
+examine(gate) :-
+        i_am_at(entrance),
+        locked(gate),
+        can_be_unlocked(gate),
+        retractall(locked(gate)),
+        write('The gate opens, inviting you to enter the Gardens.'), !, nl.
 
 examine(X) :-
         i_am_at(Place),
@@ -348,7 +365,11 @@ cast(tp, _) :-
 cast(_, _) :-
         write('It doesn''t work!'), !, nl.
 
-
+can_be_unlocked(gate) :-
+        shining(blue_bowl),
+        shining(red_bowl),
+        shining(green_bowl),
+        shining(white_bowl).
 
 /* This rule tells how to die. */
 
@@ -403,6 +424,7 @@ start :-
 
 start :-
         assert(started),
+        tty_clear,
         introduction,
         instructions,
         assert(i_am_at(entrance)),
@@ -411,6 +433,7 @@ start :-
 
 /* Map */
 map :-
+        tty_clear,
         write('    _________________________^_^_^_^_^_^_^_^_^_'), nl,
         write('   (~~~)       /       :    |                 |'), nl,
         write('  (~~~~)      /        :    |             [_] |'), nl,
@@ -430,4 +453,4 @@ map :-
         write('\\                    |      / \\               |'), nl,
         write(' \\___________________|____________[--]________|'), nl,
         write('                                  |  |'), nl,
-        write('                                  |  |'), nl.
+        write('      ~~ Gardens of Bloom ~~      |  |'), nl.
