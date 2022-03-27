@@ -1,39 +1,68 @@
 /* Overcast, by AAP. */
 
+/* ------------ Dynamic section --------------- */
 :- dynamic started/0.
 :- dynamic i_am_at/1, at/2.
-:- dynamic in_inventory/1.          % Status for objects in inventory.
+:- dynamic in_inventory/1, locked/1, shining/1.
 :- dynamic wet/1, frozen/1, hot/1.  % Statuses from spells.
+:- discontiguous heavy/1, locked/1. % To remove warnings.
 
 :- retractall(started).
 :- retractall(at(_, _)), retractall(i_am_at(_)), retractall(in_inventory(_)).
 :- retractall(wet(_)), retractall(frozen(_)), retractall(hot(_)).
 
 
-/* ------- Paths --------- */
+/* ----------------- Paths ----------------- */
 path(entrance, n, box_location).
 path(box_location, s, entrance).
+path(entrance, w, fountain1).
 
 /* -------- Objects in locations -------- */
+/* Room Z1 (entrance) */
 at(blue_bowl, entrance).
 at(red_bowl, entrance).
 at(white_bowl, entrance).
 at(green_bowl, entrance).
+at(blue_orb, red_bowl).
+at(green_orb, green_bowl).
 at(golden_ring, entrance).
-at(box, box_location).
+at(gate, entrance).
 
-/* ------- Immovable objects ------------ */
-heavy(box).
+/* Room Z1A (box_location) */
+at(box, box_location).
+at(red_orb, box).
+
+/* ------- Objects' starting statuses ------------ */
+% heavy - the player cannot take this item.
+% locked - it has to be unlocked somehow to proceed.
+% shining - on a good way to solve a riddle.
+
+/* Room Z1 (entrance) */
 heavy(blue_bowl).
 heavy(red_bowl).
 heavy(white_bowl).
 heavy(green_bowl).
+heavy(gate).
+locked(gate).
+shining(green_bowl).
+shining(white_bowl).
+frozen(white_bowl).
+
+/* Room Z1A (box_location) */
+heavy(box).
 
 /* --------- Describing places and objects ----------- */
 describe(entrance) :- write('You are standing before an entrance to the Gardens.'), !, nl.
 describe(X) :- write('It looks like... a '), write(X), write('.'), !, nl.
 
 /* ---------- Take item ---------- */
+take(box) :-
+        i_am_at(box_location),
+        at(red_orb, box),
+        retractall(at(red_orb, box)),
+        assert(in_inventory(red_orb)),
+        write('You take the fiery looking red orb from the box and put it to your inventory.'), !, nl.
+
 take(Item) :-
         in_inventory(Item),
         write('This item is already in your inventory!'),
@@ -63,20 +92,33 @@ take(_) :-
         write('I don''t see it here.'),
         nl.
 
+
+
 /* Inventory */
 i :-
         in_inventory(Item),
-        write(Item), write(','), fail.
+        write(Item), write(', '), fail.
 
 i :-
-        write(' *end of inventory*.').
+        write('*end of inventory*.').
 
 inventory :-
         in_inventory(Item),
-        write(Item), write(','), fail.
+        write(Item), write(', '), fail.
 
 inventory :-
-        write(' *end of inventory*.').
+        write('*end of inventory*.').
+
+/* Use item on another object */
+use(Item, Other) :-
+        in_inventory(Item),
+        i_am_at(Place),
+        at(Other, Place),
+        write('... it doesn''t seem to work.'), !, nl.
+
+use(Item, _) :-
+        \+ in_inventory(Item),
+        write('You don''t have a '), write(Item), write(' in your inventory.'), !, nl.
 
 
 /* These rules define the direction letters as calls to go/1. */
@@ -90,6 +132,10 @@ e :- go(e).
 w :- go(w).
 
 /* This rule tells how to move in a given direction. */
+go(w) :-                   % From entrance to first of twin rooms
+        i_am_at(entrance),
+        locked(gate),
+        write('The gate is locked. You have to find a way to open it!'), !, nl.
 
 go(Direction) :-
         i_am_at(Here),
@@ -125,7 +171,22 @@ examine(X) :-
         i_am_at(Place),
         at(X, Place),
         describe(X),
+        notice_objects_at(X),
         print_status(X), !.
+
+examine(X) :-
+        in_inventory(X),
+        write('You have this very magical artifact in your inventory.'), !, nl.
+
+examine(_) :-
+        write('You don''t sense the magic presence of this object here.'), !, nl.
+
+
+print_status(X) :-
+        shining(X), write('The '), write(X), write(' is shining! It gives you a good feeling.'), nl, fail.
+
+print_status(X) :-
+        locked(X), write('The '), write(X), write(' is locked.'), nl, fail.
 
 print_status(X) :-
         wet(X), write('The '), write(X), write(' is wet.'), !, nl.
@@ -147,6 +208,32 @@ cast(_, X) :-
         write('You cannot use spells on items inside your inventory!'), !, nl.
 
 /* rain spell section */
+cast(rain, blue_bowl) :-
+        i_am_at(entrance),
+        retractall(hot(blue_bowl)),
+        retractall(frozen(blue_bowl)),
+        retractall(shining(blue_bowl)),         % In case the same spell is used multiple times.
+        assert(shining(blue_bowl)),
+        assert(wet(blue_bowl)),
+        write('You cast a rain spell on the blue bowl.'), nl,
+        write('The bowl fills with rainwater and it starts to shine brightly.'), !, nl.
+
+cast(rain, white_bowl) :-
+        i_am_at(entrance),
+        shining(white_bowl),
+        retractall(shining(white_bowl)),
+        write('The white bowl stops to shine. Maybe you did something wrong...'), nl, fail.
+
+cast(rain, red_bowl) :-
+        i_am_at(entrance),
+        shining(red_bowl),
+        hot(red_bowl),
+        retractall(shining(red_bowl)),
+        retractall(hot(red_bowl)),
+        assert(wet(red_bowl)),
+        write('The water from the rain extinguishes the fire in the red bowl. It stops to shine.'), nl,
+        write('Maybe you did something wrong...'), !, nl.
+
 cast(rain, X) :-
         i_am_at(Place),
         at(X, Place),
@@ -168,6 +255,31 @@ cast(rain, X) :-
         write('The '), write(X), write(' is wet because of rain.'), !, nl.
 
 /* sunbeam spell section */
+
+cast(sunbeam, red_bowl) :-
+        i_am_at(entrance),
+        retractall(wet(red_bowl)),
+        retractall(frozen(red_bowl)),
+        retractall(shining(red_bowl)),
+        assert(shining(red_bowl)),
+        assert(hot(red_bowl)),
+        write('You cast a sunbeam spell on the red bowl.'), nl,
+        write('Great, now it''s on fire. But also it shines brighter than it should.'), !, nl.
+
+cast(sunbeam, white_bowl) :-
+        i_am_at(entrance),
+        retractall(shining(white_bowl)),
+        write('The white bowl stops to shine. Maybe you did something wrong...'), nl, fail.
+
+cast(sunbeam, blue_bowl) :-
+        i_am_at(entrance),
+        shining(blue_bowl),
+        wet(blue_bowl),
+        retractall(shining(blue_bowl)),
+        retractall(wet(blue_bowl)),
+        write('The water evaporates and the blue bowl stops to shine.'), nl,
+        write('Maybe you did something wrong...'), !, nl.
+
 cast(sunbeam, X) :-
         i_am_at(Place),
         at(X, Place),
@@ -189,6 +301,32 @@ cast(sunbeam, X) :-
         write('The '), write(X), write(' is now hot.'), !, nl.
 
 /* frost spell section */
+cast(frost, white_bowl) :-
+        i_am_at(entrance),
+        retractall(shining(white_bowl)),        % In case the same spell is used multiple times.
+        assert(shining(white_bowl)),
+        write('You use your white wand of frost on a white bowl. It shines brightly!'), nl, fail.
+
+cast(frost, red_bowl) :-
+        i_am_at(entrance),
+        shining(red_bowl),
+        hot(red_bowl),
+        retractall(shining(red_bowl)),
+        retractall(hot(red_bowl)),
+        assert(frozen(red_bowl)),
+        write('The freezing wind extinguishes the fire in the red bowl. It stops to shine.'), nl,
+        write('Maybe you did something wrong...'), !, nl.
+
+cast(frost, blue_bowl) :-
+        i_am_at(entrance),
+        shining(blue_bowl),
+        wet(blue_bowl),
+        retractall(shining(blue_bowl)),
+        retractall(wet(blue_bowl)),
+        assert(frozen(blue_bowl)),
+        write('The water freezes and the blue bowl stops to shine.'), nl,
+        write('Maybe you did something wrong...'), !, nl.
+
 cast(frost, X) :-
         i_am_at(Place),
         at(X, Place),
@@ -246,13 +384,15 @@ instructions :-
         write('Enter commands using standard Prolog syntax. '), nl,
         write('Rules of the adventure:'), nl,
         write('start.             -- to start the game.'), nl,
-        write('n.  s.  e.  w.     -- to go in that direction.'), nl,
-        write('take(item).        -- to pick up an item and place it in your inventory.'), nl,
+        write('n.  s.  e.  w.     -- to go to another room in that direction.'), nl,
         write('look.              -- to look around you again.'), nl,
+        write('examine(item).     -- to take a closer look at the item.'), nl,
+        write('take(item).        -- to pick up an item and place it in your inventory.'), nl,
+        write('i. inventory.      -- to view your inventory.'), nl,
         write('use(item, other)   -- to use an item from your inventory on another object.'), nl,
         write('cast(rain/sunbeam/frost, object) -- to use one of your wands on the chosen object.'), nl,
         write('map.               -- to show a map.'), nl,
-        write('mana.              -- to show your mana usage.'), nl, 
+        % write('mana.              -- to show your mana usage.'), nl, 
         write('instructions.      -- to see this message again.'), nl,
         write('halt.              -- to end the game and quit.'), nl,
         nl.
