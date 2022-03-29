@@ -20,7 +20,7 @@ path(fountain1, e, entrance).
 
 /* -------- Objects in locations -------- */
 /* Room Z1 (entrance) */
-at(blue_bowl, entrance).
+
 at(red_bowl, entrance).
 at(white_bowl, entrance).
 at(green_bowl, entrance).
@@ -31,12 +31,13 @@ at(gate, entrance).
 
 /* Room Z1A (box_location) */
 at(box, box_location).
+at(blue_bowl, box_location).
 at(red_orb, box).
 
 /* ------- Objects' starting statuses ------------ */
 % heavy - the player cannot take this item.
 % locked - it has to be unlocked somehow to proceed.
-% shining - on a good way to solve a riddle.
+% shining - on a good way to solve a puzzle.
 
 /* Room Z1 (entrance) */
 heavy(blue_bowl).
@@ -62,16 +63,18 @@ take(box) :-
         at(red_orb, box),
         retractall(at(red_orb, box)),
         assert(in_inventory(red_orb)),
-        write('You take the fiery looking red orb from the box and put it to your inventory.'), !, nl.
+        write('You take the fiery looking red orb from the box and put it to your bottomless flying chest.'), !, nl.
 
 take(Item) :-
         in_inventory(Item),
-        write('This item is already in your inventory!'),
+        write('> Brusto says: "This item is already in my stomach... I mean, storage!"'),
         !, nl.
 
 take(Item) :-
         heavy(Item),
-        write('This object is too heavy!'),
+        i_am_at(Place),
+        at(Item, Place),
+        write('> Brusto says: "This object is too heavy for me!"'),
         !, nl.
 
 take(golden_ring) :-
@@ -86,29 +89,37 @@ take(X) :-
         at(X, Place),
         retractall(at(X, Place)),
         assert(in_inventory(X)),
-        write('The '), write(X), write(' is now in your inventory.'),
+        write('The '), write(X), write(' is now in your bottomless flying chest.'),
+        !, nl.
+
+take(Y) :-              % Take an item that is nested in another item.
+        i_am_at(Place),
+        at(X, Place),
+        at(Y, X),
+        retractall(at(Y, X)),
+        assert(in_inventory(Y)),
+        write('The '), write(Y), write(' is now in your bottomless flying chest.'),
         !, nl.
 
 take(_) :-
-        write('I don''t see it here.'),
+        write('> Brusto says: "I don''t see it here."'),
         nl.
 
 
 
 /* Inventory */
 i :-
+        write('Brusto shows you the items that you collected: '), nl, fail.
+
+i :-
         in_inventory(Item),
-        write(Item), write(', '), fail.
+        ansi_format([bold,fg(magenta)], '~w', [Item]), write(', '), fail.
 
 i :-
         write('*end of inventory*.').
 
 inventory :-
-        in_inventory(Item),
-        write(Item), write(', '), fail.
-
-inventory :-
-        write('*end of inventory*.').
+        i.
 
 /* Use item on another object */
 use(Item, Other) :-
@@ -150,7 +161,7 @@ go(w)  :-
 go(Direction) :-
         i_am_at(Here),
         path(Here, Direction, There),
-        retract(i_am_at(Here)),
+        retractall(i_am_at(Here)),
         assert(i_am_at(There)),
         !, look.
 
@@ -172,7 +183,9 @@ look :-
 
 notice_objects_at(Place) :-
         at(X, Place),
-        write('There is a '), write(X), write(' here.'), nl,
+        write('You sense a '), 
+        ansi_format([bold,fg(magenta)], '~w', [X]),
+        write(' here.'), nl,
         fail.
 
 notice_objects_at(_).
@@ -193,26 +206,35 @@ examine(X) :-
 
 examine(X) :-
         in_inventory(X),
-        write('You have this very magical artifact in your inventory.'), !, nl.
+        write('You have this very magical artifact in your bottomless chest.'), !, nl.
 
 examine(_) :-
         write('You don''t sense the magic presence of this object here.'), !, nl.
 
 
 print_status(X) :-
-        shining(X), write('The '), write(X), write(' is shining! It gives you a good feeling.'), nl, fail.
+        shining(X), write('The '),
+        ansi_format([bold,fg(magenta)], '~w', [X]), write(' is'),
+        ansi_format([bold,fg(yellow)], ' shining', [_]),
+        write('! It gives you a good feeling.'), nl, fail.
 
 print_status(X) :-
         locked(X), write('The '), write(X), write(' is locked.'), nl, fail.
 
 print_status(X) :-
-        wet(X), write('The '), write(X), write(' is wet.'), !, nl.
+        wet(X), write('The '), 
+        ansi_format([bold,fg(magenta)], '~w', [X]), write(' is'),
+        ansi_format([bold,fg(blue)], ' wet', [_]), write('.'), !, nl.
 
 print_status(X) :-
-        frozen(X), write('The '), write(X), write(' is frozen.'), !, nl.
+        frozen(X), write('The '), 
+        ansi_format([bold,fg(magenta)], '~w', [X]), write(' is'),
+        ansi_format([bold,fg(cyan)], ' frozen', [_]), write('.'), !, nl.
 
 print_status(X) :-
-        hot(X), write('The '), write(X), write(' is hot.'), !, nl.
+        hot(X), write('The '), 
+        ansi_format([bold,fg(magenta)], '~w', [X]), write(' is'),
+        ansi_format([bold,fg(red)], ' hot', [_]), write('.'), !, nl.
 
 print_status(_) :-
         !, nl.
@@ -222,11 +244,11 @@ print_status(_) :-
 % Not sure whether necessary
 cast(_, X) :-
         in_inventory(X),
-        write('You cannot use spells on items inside your inventory!'), !, nl.
+        write('> Brusto says: "You cannot use spells on items inside me!"'), !, nl.
 
 /* rain spell section */
 cast(rain, blue_bowl) :-
-        i_am_at(entrance),
+        i_am_at(box_location),
         retractall(hot(blue_bowl)),
         retractall(frozen(blue_bowl)),
         retractall(shining(blue_bowl)),         % In case the same spell is used multiple times.
@@ -281,7 +303,7 @@ cast(sunbeam, red_bowl) :-
         assert(shining(red_bowl)),
         assert(hot(red_bowl)),
         write('You cast a sunbeam spell on the red bowl.'), nl,
-        write('Great, now it''s on fire. But also it shines brighter than it should.'), !, nl.
+        write('Great, now it''s on fire. But also it shines with its own light.'), !, nl.
 
 cast(sunbeam, white_bowl) :-
         i_am_at(entrance),
@@ -289,7 +311,7 @@ cast(sunbeam, white_bowl) :-
         write('The white bowl stops to shine. Maybe you did something wrong...'), nl, fail.
 
 cast(sunbeam, blue_bowl) :-
-        i_am_at(entrance),
+        i_am_at(box_location),
         shining(blue_bowl),
         wet(blue_bowl),
         retractall(shining(blue_bowl)),
@@ -335,7 +357,7 @@ cast(frost, red_bowl) :-
         write('Maybe you did something wrong...'), !, nl.
 
 cast(frost, blue_bowl) :-
-        i_am_at(entrance),
+        i_am_at(box_location),
         shining(blue_bowl),
         wet(blue_bowl),
         retractall(shining(blue_bowl)),
@@ -388,34 +410,38 @@ finish :-
 
 /* This rule prints an introduction to the game. */
 introduction :-
-        nl,
+        tty_clear,
         write('--- Welcome to Overcast! You are Vetero, the Weather Mage.'), nl,
         write('The time has come for your final trial - you must travel '), nl,
         write('through the Gardens of Bloom, full of dangers and puzzles.'), nl,
         write('You have three wands:'), nl,
         write('  --> the blue wand of rain'), nl,
         write('  --> the red wand of sunbeam'), nl,
-        write('  --> the white wand of frost'), nl,
-        write('But your magic is not unlimited... '), nl.
+        write('  --> the white wand of frost'), nl, nl,
+        write('Your friend, Brusto the magical bottomless chest, looks at you expectantly. '), nl,
+        write('For some reason, it says "true." every time you do something. Just ignore it.'), nl, nl,
+        write('> Type `help.` for instructions. '), nl,
+        write('> Type `look.` to sense magical objects around you. '), nl.
 
 /* This rule just writes out game instructions. */
 
+help :-
+        instructions.
+
 instructions :-
-        nl,
-        write('Enter commands using standard Prolog syntax. '), nl,
+        tty_clear,
         write('Rules of the adventure:'), nl,
-        write('start.             -- to start the game.'), nl,
-        write('n.  s.  e.  w.     -- to go to another room in that direction.'), nl,
-        write('look.              -- to look around you again.'), nl,
-        write('examine(item).     -- to take a closer look at the item.'), nl,
-        write('take(item).        -- to pick up an item and place it in your inventory.'), nl,
-        write('i. inventory.      -- to view your inventory.'), nl,
-        write('use(item, other)   -- to use an item from your inventory on another object.'), nl,
-        write('cast(rain/sunbeam/frost, object) -- to use one of your wands on the chosen object.'), nl,
-        write('map.               -- to show a map.'), nl,
-        % write('mana.              -- to show your mana usage.'), nl, 
-        write('instructions.      -- to see this message again.'), nl,
-        write('halt.              -- to end the game and quit.'), nl,
+        write('> start.             -- to start the game.'), nl,
+        write('> n.  s.  e.  w.     -- to go to another room in that direction.'), nl,
+        write('> look.              -- to sense magical objects around you.'), nl,
+        write('> examine(item).     -- to take a closer look at the item.'), nl,
+        write('> take(item).        -- to pick up an item and place it in your bottomless flying chest.'), nl,
+        write('> i. inventory.      -- to view the contents of your bottomless flying chest.'), nl,
+        write('> use(item, other)   -- to use an item from your inventory on another object.'), nl,
+        write('> cast(rain/sunbeam/frost, object) -- to use one of your wands on the chosen object.'), nl,
+        write('> map.               -- to show a map.'), nl,
+        write('> help.              -- to see this message again.'), nl,
+        write('> halt.              -- to end the game and quit.'), nl,
         nl.
 
 start :-
@@ -424,11 +450,8 @@ start :-
 
 start :-
         assert(started),
-        tty_clear,
         introduction,
-        instructions,
-        assert(i_am_at(entrance)),
-        look.
+        assert(i_am_at(entrance)).
 
 
 /* Map */
@@ -436,10 +459,10 @@ map :-
         tty_clear,
         write('    _________________________^_^_^_^_^_^_^_^_^_'), nl,
         write('   (~~~)       /       :    |                 |'), nl,
-        write('  (~~~~)      /        :    |             [_] |'), nl,
+        write('  (~~~~)      /        :    |  \\_/        [_] |'), nl,
         write('  ( ~~~~)    [x]            |                 |'), nl,
         write('( ~~~~~~)     |             |--------  -------|'), nl,
-        write('(~~~~~~~~)    |             |  \\_/       \\_/  |'), nl,
+        write('(~~~~~~~~)    |             |            \\_/  |'), nl,
         write('  (~~~~~~~~)--|-----[ ]-----|                 |'), nl,
         write(' / (~~~~~~)   |             |                 |'), nl,
         write('|     (~~~)   |             |      START      |'), nl,
