@@ -40,7 +40,6 @@ at(red_orb, box).
 % shining - on a good way to solve a puzzle.
 
 /* Room Z1 (entrance) */
-heavy(blue_bowl).
 heavy(red_bowl).
 heavy(white_bowl).
 heavy(green_bowl).
@@ -51,6 +50,7 @@ shining(white_bowl).
 frozen(white_bowl).
 
 /* Room Z1A (box_location) */
+heavy(blue_bowl).
 heavy(box).
 
 /* --------- Describing places and objects ----------- */
@@ -58,12 +58,21 @@ describe(entrance) :- write('You are standing before an entrance to the Gardens.
 describe(X) :- write('It looks like... a '), write(X), write('.'), !, nl.
 
 /* ---------- Take item ---------- */
-take(box) :-
+take(red_orb) :-
         i_am_at(box_location),
         at(red_orb, box),
         retractall(at(red_orb, box)),
         assert(in_inventory(red_orb)),
         write('You take the fiery looking red orb from the box and put it to your bottomless flying chest.'), !, nl.
+
+take(green_orb) :-
+        i_am_at(entrance),
+        at(green_orb, green_bowl),
+        retractall(at(green_orb, green_bowl)),
+        retractall(shining(green_bowl)),
+        assert(in_inventory(green_orb)),
+        write('You take the green orb from the green bowl and put it to your bottomless flying chest.'), nl,
+        write('The bowl stops to shine. Maybe you did something wrong...'), !, nl.
 
 take(Item) :-
         in_inventory(Item),
@@ -122,15 +131,47 @@ inventory :-
         i.
 
 /* Use item on another object */
+
+use(Item, Other) :-
+        in_inventory(Item), heavy(Other),
+        i_am_at(Place),
+        at(Other, Place),
+        retractall(in_inventory(Item)),
+        assert(at(Item, Other)),
+        write('You place a '), 
+        ansi_format([bold,fg(magenta)], '~w', [Item]),
+        write(' in a '),
+        ansi_format([bold,fg(magenta)], '~w.', [Other]),
+        nl, fail.
+
+use(green_orb, green_bowl) :-
+        i_am_at(entrance),
+        at(green_orb, green_bowl),
+        assert(shining(green_bowl)),
+        write('It '),
+        ansi_format([bold,fg(yellow)], 'shines', [_]),
+        write(' brightly!'), !, nl.
+
+use(Item, Other) :-
+        i_am_at(Place),
+        at(Other, Place),
+        at(Item, Other),
+        write('Nothing seems to happen.'), !, nl.
+
 use(Item, Other) :-
         in_inventory(Item),
         i_am_at(Place),
         at(Other, Place),
-        write('... it doesn''t seem to work.'), !, nl.
+        write('You can''t use it here!'), !, nl.
 
 use(Item, _) :-
         \+ in_inventory(Item),
         write('You don''t have a '), write(Item), write(' in your inventory.'), !, nl.
+
+use(_, Other) :-
+        i_am_at(Place),
+        \+ at(Other, Place),
+        write('You don''t sense a '), write(Other), write(' here.'), !, nl.
 
 
 /* These rules define the direction letters as calls to go/1. */
@@ -255,7 +296,9 @@ cast(rain, blue_bowl) :-
         assert(shining(blue_bowl)),
         assert(wet(blue_bowl)),
         write('You cast a rain spell on the blue bowl.'), nl,
-        write('The bowl fills with rainwater and it starts to shine brightly.'), !, nl.
+        write('The bowl fills with rainwater and it starts to '),
+        ansi_format([bold,fg(yellow)], 'shine', [_]),
+        write(' brightly.'), !, nl.
 
 cast(rain, white_bowl) :-
         i_am_at(entrance),
@@ -291,7 +334,9 @@ cast(rain, X) :-
         i_am_at(Place),
         at(X, Place),
         assert(wet(X)),
-        write('The '), write(X), write(' is wet because of rain.'), !, nl.
+        write('The '), write(X), write(' is '),
+        ansi_format([bold,fg(blue)], 'wet', [_]),
+        write(' because of rain.'), !, nl.
 
 /* sunbeam spell section */
 
@@ -302,8 +347,12 @@ cast(sunbeam, red_bowl) :-
         retractall(shining(red_bowl)),
         assert(shining(red_bowl)),
         assert(hot(red_bowl)),
-        write('You cast a sunbeam spell on the red bowl.'), nl,
-        write('Great, now it''s on fire. But also it shines with its own light.'), !, nl.
+        write('You cast a'),
+        ansi_format([bold,fg(red)], ' sunbeam ', [_]),
+        write('spell on the red bowl.'), nl,
+        write('Great, now it''s on fire. But also it '),
+        ansi_format([bold,fg(yellow)], 'shines', [_]),
+        write(' with its own light.'), !, nl.
 
 cast(sunbeam, white_bowl) :-
         i_am_at(entrance),
@@ -337,14 +386,17 @@ cast(sunbeam, X) :-
         i_am_at(Place),
         at(X, Place),
         assert(hot(X)),
-        write('The '), write(X), write(' is now hot.'), !, nl.
+        write('The '), write(X), write(' is now'),
+        ansi_format([bold,fg(red)], ' hot.', [_]), !, nl.
 
 /* frost spell section */
 cast(frost, white_bowl) :-
         i_am_at(entrance),
         retractall(shining(white_bowl)),        % In case the same spell is used multiple times.
         assert(shining(white_bowl)),
-        write('You use your white wand of frost on a white bowl. It shines brightly!'), nl, fail.
+        write('You use your white wand of frost on a white bowl. It '),
+        ansi_format([bold,fg(yellow)], 'shines', [_]),
+        write(' brightly!'), nl, fail.
 
 cast(frost, red_bowl) :-
         i_am_at(entrance),
@@ -378,7 +430,8 @@ cast(frost, X) :-
         at(X, Place),
         assert(frozen(X)),
         retractall(wet(X)),
-        write('The '), write(X), write(' is now frozen.'), !, nl.
+        write('The '), write(X), write(' is now '),
+        ansi_format([bold,fg(cyan)], 'frozen.', [_]), !, nl.
 
 /* wrong usage section */
 cast(tp, _) :-
@@ -411,13 +464,23 @@ finish :-
 /* This rule prints an introduction to the game. */
 introduction :-
         tty_clear,
-        write('--- Welcome to Overcast! You are Vetero, the Weather Mage.'), nl,
+        write('--- Welcome to '),
+        ansi_format([bold,fg(magenta)], 'Overcast', [_]),
+        write('! You are Vetero, the Weather Mage.'), nl,
         write('The time has come for your final trial - you must travel '), nl,
-        write('through the Gardens of Bloom, full of dangers and puzzles.'), nl,
+        write('through the '),
+        ansi_format([bold,fg(green)], 'Gardens of Bloom', [_]),
+        write(', full of dangers and puzzles.'), nl,
         write('You have three wands:'), nl,
-        write('  --> the blue wand of rain'), nl,
-        write('  --> the red wand of sunbeam'), nl,
-        write('  --> the white wand of frost'), nl, nl,
+        write('  --> the '),
+        ansi_format([bold,fg(blue)], 'blue', [_]),
+        write(' wand of rain'), nl,
+        write('  --> the '),
+        ansi_format([bold,fg(red)], 'red', [_]),
+        write(' wand of sunbeam'), nl,
+        write('  --> the '),
+        ansi_format([underline,fg(white)], 'white', [_]),
+        write(' wand of frost'), nl, nl,
         write('Your friend, Brusto the magical bottomless chest, looks at you expectantly. '), nl,
         write('For some reason, it says "true." every time you do something. Just ignore it.'), nl, nl,
         write('> Type `help.` for instructions. '), nl,
