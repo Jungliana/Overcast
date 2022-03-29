@@ -11,4 +11,6 @@ You have three wands:
 - the red wand of sunbeam, 
 - the white wand of frost. 
 
-But your magic isn’t unlimited... 
+Your friend, Brusto the magical bottomless chest, looks at you expectantly. For some reason, it says "true." every time you do something. Just ignore it.
+- Type `help.` for instructions.
+- Type `look.` to sense magical objects around you.
