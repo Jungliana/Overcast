@@ -5,7 +5,7 @@
 :- dynamic i_am_at/1, at/2.
 :- dynamic in_inventory/1, locked/1, shining/1, alive/1.
 :- dynamic wet/1, frozen/1, hot/1.  % Statuses from spells.
-:- discontiguous heavy/1, locked/1, alive/1. % To remove warnings.
+:- discontiguous locked/1, alive/1, immovable/1, cut/1. % To remove warnings.
 
 :- retractall(started).
 :- retractall(at(_, _)), retractall(i_am_at(_)), retractall(in_inventory(_)).
@@ -15,8 +15,10 @@
 /* ----------------- Paths ----------------- */
 path(entrance, n, box_location).
 path(box_location, s, entrance).
-path(entrance, w, fountain1).
-path(fountain1, e, entrance).
+path(entrance, w, room_south).
+path(room_south, e, entrance).
+path(room_south, n, room_north).
+path(room_north, s, room_south).
 
 /* -------- Objects in locations -------- */
 /* Room Z1 (entrance) */
@@ -34,26 +36,57 @@ at(blue_bowl, box_location).
 at(red_orb, box).
 at(curious_rat, box_location).
 
+/* Room Z2 south */
+at(fountain, room_south).
+at(wooden_torch_holder, room_south).
+at(wooden_torch, wooden_torch_holder).
+at(cut_rope, room_south).
+at(scissors, room_south).
+
+/* Room Z2 north */
+at(fancy_fountain, room_north).
+at(torch, room_north).
+at(torch_holder, room_north).
+at(rope, room_north).
+at(wooden_plank, room_north).
+at(valve, room_north).
+at(gateway, room_north).
+
 /* ------- Objects' starting statuses ------------ */
-% heavy - the player cannot take this item.
+% immovable - the player cannot take this item.
 % locked - it has to be unlocked somehow to proceed.
 % shining - on a good way to solve a puzzle.
 % alive - mostly rats.
 
 /* Room Z1 (entrance) */
-heavy(red_bowl).
-heavy(white_bowl).
-heavy(green_bowl).
-heavy(gate).
+immovable(red_bowl).
+immovable(white_bowl).
+immovable(green_bowl).
+immovable(gate).
 locked(gate).
 shining(green_bowl).
 shining(white_bowl).
 frozen(white_bowl).
 
 /* Room Z1A (box_location) */
-heavy(blue_bowl).
-heavy(box).
+immovable(blue_bowl).
+immovable(box).
 alive(curious_rat).
+
+/* Room Z2A */
+wet(fountain).
+immovable(fountain).
+immovable(wooden_torch_holder).
+immovable(cut_rope).
+cut(rope).
+
+/* Room Z2B */
+immovable(fancy_fountain).
+immovable(torch_holder).
+immovable(rope).
+immovable(valve).
+immovable(gateway).
+locked(gateway).
 
 /* --------- Puzzle mechanics --------- */
 assert_shining(X) :-
@@ -129,10 +162,10 @@ take(Item) :-
         !, nl.
 
 take(Item) :-
-        heavy(Item),
+        immovable(Item),
         i_am_at(Place),
         at(Item, Place),
-        write('> Brusto says: "This object is too heavy for me!"'),
+        write('> Brusto says: "This object is immovable, I can''t take it!"'),
         !, nl.
 
 take(Creature) :-
@@ -189,7 +222,7 @@ inventory :-
 /* Use item on another object */
 
 use(Item, Other) :-
-        in_inventory(Item), heavy(Other),
+        in_inventory(Item), immovable(Other),
         i_am_at(Place),
         at(Other, Place),
         retractall(in_inventory(Item)),
@@ -596,10 +629,8 @@ map :-
         write('|             |             |                 |'), nl,
         write('|             \\        :    |  \\_/       \\_/  |'), nl,
         write('|              \\_______:____|_________________|'), nl,
-        write('|                    |                        |'), nl,
-        write('|                    |                        |'), nl,
-        write('|                   [x]                       |'), nl,
-        write('\\                    |                        |'), nl,
-        write(' \\___________________|____________[--]________|'), nl,
-        write('                                  |  |'), nl,
-        write('      ~~ Gardens of Bloom ~~      |  |'), nl.
+        write('|                  |                       |'), nl,
+        write('|                 [x]                      |'), nl,
+        write(' \\_________________|___________[--]_______/'), nl,
+        write('                               |  |'), nl,
+        write('     ~~ Gardens of Bloom ~~    |  |'), nl.
