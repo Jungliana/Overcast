@@ -3,9 +3,9 @@
 /* ------------ Dynamic section --------------- */
 :- dynamic started/0.
 :- dynamic i_am_at/1, at/2.
-:- dynamic in_inventory/1, locked/1, shining/1.
+:- dynamic in_inventory/1, locked/1, shining/1, alive/1.
 :- dynamic wet/1, frozen/1, hot/1.  % Statuses from spells.
-:- discontiguous heavy/1, locked/1. % To remove warnings.
+:- discontiguous heavy/1, locked/1, alive/1. % To remove warnings.
 
 :- retractall(started).
 :- retractall(at(_, _)), retractall(i_am_at(_)), retractall(in_inventory(_)).
@@ -28,6 +28,7 @@ at(blue_orb, red_bowl).
 at(green_orb, green_bowl).
 at(golden_ring, entrance).
 at(gate, entrance).
+at(curious_rat, entrance).
 
 /* Room Z1A (box_location) */
 at(box, box_location).
@@ -48,6 +49,7 @@ locked(gate).
 shining(green_bowl).
 shining(white_bowl).
 frozen(white_bowl).
+alive(curious_rat).
 
 /* Room Z1A (box_location) */
 heavy(blue_bowl).
@@ -84,6 +86,13 @@ take(Item) :-
         i_am_at(Place),
         at(Item, Place),
         write('> Brusto says: "This object is too heavy for me!"'),
+        !, nl.
+
+take(Creature) :-
+        alive(Creature),
+        i_am_at(Place),
+        at(Creature, Place),
+        write('> Brusto says: "I don''t want to store anything alive inside me..."'),
         !, nl.
 
 take(golden_ring) :-
@@ -238,6 +247,11 @@ examine(gate) :-
         retractall(locked(gate)),
         write('The gate opens, inviting you to enter the Gardens.'), !, nl.
 
+examine(curious_rat) :-
+        i_am_at(entrance),
+        locked(gate),
+        write('> Curious rat says: "Squeak! I wonder what makes the bowls shine?"'), nl, fail.
+
 examine(X) :-
         i_am_at(Place),
         at(X, Place),
@@ -286,6 +300,10 @@ print_status(_) :-
 cast(_, X) :-
         in_inventory(X),
         write('> Brusto says: "You cannot use spells on items inside me!"'), !, nl.
+
+cast(_, Creature) :-
+        alive(Creature),
+        write('The '), write(Creature), write(' looks at you disapprovingly.'), nl, fail.
 
 /* rain spell section */
 cast(rain, blue_bowl) :-
