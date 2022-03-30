@@ -20,7 +20,6 @@ path(fountain1, e, entrance).
 
 /* -------- Objects in locations -------- */
 /* Room Z1 (entrance) */
-
 at(red_bowl, entrance).
 at(white_bowl, entrance).
 at(green_bowl, entrance).
@@ -28,17 +27,18 @@ at(blue_orb, red_bowl).
 at(green_orb, green_bowl).
 at(golden_ring, entrance).
 at(gate, entrance).
-at(curious_rat, entrance).
 
 /* Room Z1A (box_location) */
 at(box, box_location).
 at(blue_bowl, box_location).
 at(red_orb, box).
+at(curious_rat, box_location).
 
 /* ------- Objects' starting statuses ------------ */
 % heavy - the player cannot take this item.
 % locked - it has to be unlocked somehow to proceed.
 % shining - on a good way to solve a puzzle.
+% alive - mostly rats.
 
 /* Room Z1 (entrance) */
 heavy(red_bowl).
@@ -49,14 +49,41 @@ locked(gate).
 shining(green_bowl).
 shining(white_bowl).
 frozen(white_bowl).
-alive(curious_rat).
 
 /* Room Z1A (box_location) */
 heavy(blue_bowl).
 heavy(box).
+alive(curious_rat).
+
+/* --------- Puzzle mechanics --------- */
+assert_shining(X) :-
+        \+ shining(X),
+        assert(shining(X)),
+        check_solution, !.
+
+check_solution :-
+        locked(gate),
+        (i_am_at(entrance); i_am_at(box_location)),
+        shining(blue_bowl), shining(red_bowl),
+        shining(green_bowl), shining(white_bowl),
+        retractall(locked(gate)),
+        nl, write('The '),
+        ansi_format([bold,fg(magenta)], 'gate', [_]),
+        write(' opens, inviting you to enter the Gardens.'), !, nl.
+
+check_solution :-
+        true.
 
 /* --------- Describing places and objects ----------- */
-describe(entrance) :- write('You are standing before an entrance to the Gardens.'), !, nl.
+describe(entrance) :- 
+        write('You are standing before an entrance gate to the Gardens.'), nl,
+        write('The birds are chirping merrily. The wind plays with your hair gently.'), nl,
+        write('> Brusto says: "What a nice day to die, isn''t it?"'), !, nl.
+
+describe(box_location) :- 
+        write('You are in a small shed near the entrance.'), nl,
+        write('There are some chests here, but you don''t care. You are not a chest mage.'), !, nl.
+
 describe(X) :- write('It looks like... a '), write(X), write('.'), !, nl.
 
 /* ---------- Take item ---------- */
@@ -74,6 +101,26 @@ take(green_orb) :-
         retractall(shining(green_bowl)),
         assert(in_inventory(green_orb)),
         write('You take the green orb from the green bowl and put it to your bottomless flying chest.'), nl,
+        write('The bowl stops to shine. Maybe you did something wrong...'), !, nl.
+
+take(red_orb) :-
+        i_am_at(entrance),
+        at(red_orb, red_bowl),
+        \+ hot(red_bowl),
+        retractall(at(red_orb, red_bowl)),
+        retractall(shining(red_bowl)),
+        assert(in_inventory(red_orb)),
+        write('You take the red orb from the red bowl and put it to your bottomless flying chest.'), nl,
+        write('The bowl stops to shine. Maybe you did something wrong...'), !, nl.
+
+take(blue_orb) :-
+        i_am_at(box_location),
+        at(blue_orb, blue_bowl),
+        \+ wet(blue_bowl),
+        retractall(at(blue_orb, blue_bowl)),
+        retractall(shining(blue_bowl)),
+        assert(in_inventory(blue_orb)),
+        write('You take the blue orb from the blue bowl and put it to your bottomless flying chest.'), nl,
         write('The bowl stops to shine. Maybe you did something wrong...'), !, nl.
 
 take(Item) :-
@@ -156,10 +203,26 @@ use(Item, Other) :-
 use(green_orb, green_bowl) :-
         i_am_at(entrance),
         at(green_orb, green_bowl),
-        assert(shining(green_bowl)),
         write('It '),
         ansi_format([bold,fg(yellow)], 'shines', [_]),
-        write(' brightly!'), !, nl.
+        write(' brightly!'), 
+        assert_shining(green_bowl), !, nl.   % Assert shining must be in the last line in this case.
+
+use(red_orb, red_bowl) :-
+        i_am_at(entrance),
+        at(red_orb, red_bowl),
+        write('It '),
+        ansi_format([bold,fg(yellow)], 'shines', [_]),
+        write(' brightly!'), 
+        assert_shining(red_bowl), !, nl.   % Assert shining must be in the last line in this case.
+
+use(blue_orb, blue_bowl) :-
+        i_am_at(box_location),
+        at(blue_orb, blue_bowl),
+        write('It '),
+        ansi_format([bold,fg(yellow)], 'shines', [_]),
+        write(' brightly!'), 
+        assert_shining(blue_bowl), !, nl.    % Assert shining must be in the last line in this case.
 
 use(Item, Other) :-
         i_am_at(Place),
@@ -194,14 +257,6 @@ e :- go(e).
 w :- go(w).
 
 /* This rule tells how to move in a given direction. */
-go(w) :-                   % From entrance to first of twin rooms
-        i_am_at(entrance),
-        locked(gate),
-        can_be_unlocked(gate),
-        retractall(locked(gate)),
-        tty_clear,
-        write('The gate opens, inviting you to enter the Gardens.'), nl,
-        write('You go through it and get to the next place.'), nl, fail.
 
 go(w)  :-
         i_am_at(entrance),
@@ -240,17 +295,10 @@ notice_objects_at(Place) :-
 
 notice_objects_at(_).
 
-examine(gate) :-
-        i_am_at(entrance),
-        locked(gate),
-        can_be_unlocked(gate),
-        retractall(locked(gate)),
-        write('The gate opens, inviting you to enter the Gardens.'), !, nl.
-
 examine(curious_rat) :-
-        i_am_at(entrance),
+        i_am_at(box_location),
         locked(gate),
-        write('> Curious rat says: "Squeak! I wonder what makes the bowls shine?"'), nl, fail.
+        write('> Curious rat says: "Squeak! I wonder what makes the stone bowls shine?"'), nl, fail.
 
 examine(X) :-
         i_am_at(Place),
@@ -311,12 +359,12 @@ cast(rain, blue_bowl) :-
         retractall(hot(blue_bowl)),
         retractall(frozen(blue_bowl)),
         retractall(shining(blue_bowl)),         % In case the same spell is used multiple times.
-        assert(shining(blue_bowl)),
         assert(wet(blue_bowl)),
         write('You cast a rain spell on the blue bowl.'), nl,
         write('The bowl fills with rainwater and it starts to '),
         ansi_format([bold,fg(yellow)], 'shine', [_]),
-        write(' brightly.'), !, nl.
+        write(' brightly.'), 
+        assert_shining(blue_bowl), !, nl.
 
 cast(rain, white_bowl) :-
         i_am_at(entrance),
@@ -327,6 +375,7 @@ cast(rain, white_bowl) :-
 cast(rain, red_bowl) :-
         i_am_at(entrance),
         shining(red_bowl),
+        \+ at(red_orb, red_bowl),
         hot(red_bowl),
         retractall(shining(red_bowl)),
         retractall(hot(red_bowl)),
@@ -363,14 +412,14 @@ cast(sunbeam, red_bowl) :-
         retractall(wet(red_bowl)),
         retractall(frozen(red_bowl)),
         retractall(shining(red_bowl)),
-        assert(shining(red_bowl)),
         assert(hot(red_bowl)),
         write('You cast a'),
         ansi_format([bold,fg(red)], ' sunbeam ', [_]),
         write('spell on the red bowl.'), nl,
         write('Great, now it''s on fire. But also it '),
         ansi_format([bold,fg(yellow)], 'shines', [_]),
-        write(' with its own light.'), !, nl.
+        write(' with its own light.'), 
+        assert_shining(red_bowl), !, nl.
 
 cast(sunbeam, white_bowl) :-
         i_am_at(entrance),
@@ -381,6 +430,7 @@ cast(sunbeam, blue_bowl) :-
         i_am_at(box_location),
         shining(blue_bowl),
         wet(blue_bowl),
+        \+ at(blue_orb, blue_bowl),
         retractall(shining(blue_bowl)),
         retractall(wet(blue_bowl)),
         write('The water evaporates and the blue bowl stops to shine.'), nl,
@@ -411,10 +461,10 @@ cast(sunbeam, X) :-
 cast(frost, white_bowl) :-
         i_am_at(entrance),
         retractall(shining(white_bowl)),        % In case the same spell is used multiple times.
-        assert(shining(white_bowl)),
         write('You use your white wand of frost on a white bowl. It '),
         ansi_format([bold,fg(yellow)], 'shines', [_]),
-        write(' brightly!'), nl, fail.
+        write(' brightly!'), 
+        assert_shining(white_bowl), nl, fail.
 
 cast(frost, red_bowl) :-
         i_am_at(entrance),
@@ -458,11 +508,6 @@ cast(tp, _) :-
 cast(_, _) :-
         write('It doesn''t work!'), !, nl.
 
-can_be_unlocked(gate) :-
-        shining(blue_bowl),
-        shining(red_bowl),
-        shining(green_bowl),
-        shining(white_bowl).
 
 /* This rule tells how to die. */
 
@@ -552,9 +597,9 @@ map :-
         write('|             \\        :    |  \\_/       \\_/  |'), nl,
         write('|              \\_______:____|_________________|'), nl,
         write('|                    |                        |'), nl,
-        write('|                    |       O                |'), nl,
-        write('|                   [x]     /0\\               |'), nl,
-        write('\\                    |      / \\               |'), nl,
+        write('|                    |                        |'), nl,
+        write('|                   [x]                       |'), nl,
+        write('\\                    |                        |'), nl,
         write(' \\___________________|____________[--]________|'), nl,
         write('                                  |  |'), nl,
         write('      ~~ Gardens of Bloom ~~      |  |'), nl.
