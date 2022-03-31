@@ -4,21 +4,22 @@
 :- dynamic started/0.
 :- dynamic i_am_at/1, at/2.
 :- dynamic in_inventory/1, locked/1, shining/1, alive/1.
-:- dynamic wet/1, frozen/1, hot/1.  % Statuses from spells.
-:- discontiguous locked/1, alive/1, immovable/1, cut/1. % To remove warnings.
+:- dynamic wet/1, frozen/1, hot/1.                       % Statuses from spells.
+:- discontiguous locked/1, alive/1, immovable/1, cut/1.  % To remove warnings.
 
 :- retractall(started).
 :- retractall(at(_, _)), retractall(i_am_at(_)), retractall(in_inventory(_)).
 :- retractall(wet(_)), retractall(frozen(_)), retractall(hot(_)).
 
-
 /* ----------------- Paths ----------------- */
-path(entrance, n, box_location).
-path(box_location, s, entrance).
+path(entrance, n, shed).
+path(shed, s, entrance).
 path(entrance, w, room_south).
 path(room_south, e, entrance).
 path(room_south, n, room_north).
 path(room_north, s, room_south).
+path(room_north, w, pond_room).
+path(pond_room, e, room_north).
 
 /* -------- Objects in locations -------- */
 /* Room Z1 (entrance) */
@@ -30,11 +31,11 @@ at(green_orb, green_bowl).
 at(golden_ring, entrance).
 at(gate, entrance).
 
-/* Room Z1A (box_location) */
-at(box, box_location).
-at(blue_bowl, box_location).
+/* Room Z1A (shed) */
+at(box, shed).
+at(blue_bowl, shed).
 at(red_orb, box).
-at(curious_rat, box_location).
+at(curious_rat, shed).
 
 /* Room Z2 south */
 at(fountain, room_south).
@@ -42,13 +43,14 @@ at(wooden_torch_holder, room_south).
 at(wooden_torch, wooden_torch_holder).
 at(cut_rope, room_south).
 at(scissors, room_south).
+at(confused_rat, room_south).
 
 /* Room Z2 north */
 at(fancy_fountain, room_north).
-at(torch, room_north).
 at(torch_holder, room_north).
+at(torch, torch_holder).
 at(rope, room_north).
-at(wooden_plank, room_north).
+at(long_plank, room_north).
 at(valve, room_north).
 at(gateway, room_north).
 
@@ -68,7 +70,7 @@ shining(green_bowl).
 shining(white_bowl).
 frozen(white_bowl).
 
-/* Room Z1A (box_location) */
+/* Room Z1A (shed) */
 immovable(blue_bowl).
 immovable(box).
 alive(curious_rat).
@@ -78,7 +80,8 @@ wet(fountain).
 immovable(fountain).
 immovable(wooden_torch_holder).
 immovable(cut_rope).
-cut(rope).
+cut(cut_rope).
+alive(confused_rat).
 
 /* Room Z2B */
 immovable(fancy_fountain).
@@ -94,9 +97,31 @@ assert_shining(X) :-
         assert(shining(X)),
         check_solution, !.
 
+torches :-
+        ((at(torch, torch_holder), at(wooden_torch, wooden_torch_holder)); 
+        (at(wooden_torch, torch_holder), at(torch, wooden_torch_holder))),
+        ((hot(torch), hot(wooden_torch));(not(hot(torch)), not(hot(wooden_torch)))).
+
+fountains :-
+        (wet(fountain), wet(fancy_fountain));
+        (frozen(fountain), frozen(fancy_fountain));
+        ((not(frozen(fountain)), not(wet(fountain))), 
+        (not(frozen(fancy_fountain)), not(wet(fancy_fountain)))).
+
+
+check_solution :-
+        locked(gateway),
+        (i_am_at(room_north); i_am_at(room_south)),
+        cut(rope), cut(cut_rope),
+        torches, fountains,
+        retractall(locked(gateway)),
+        nl, write('The '),
+        ansi_format([bold,fg(magenta)], 'gateway', [_]),
+        write(' opens so you can visit next part of the Gardens.'), !, nl.
+
 check_solution :-
         locked(gate),
-        (i_am_at(entrance); i_am_at(box_location)),
+        (i_am_at(entrance); i_am_at(shed)),
         shining(blue_bowl), shining(red_bowl),
         shining(green_bowl), shining(white_bowl),
         retractall(locked(gate)),
@@ -113,15 +138,29 @@ describe(entrance) :-
         write('The birds are chirping merrily. The wind plays with your hair gently.'), nl,
         write('> Brusto says: "What a nice day to die, isn''t it?"'), !, nl.
 
-describe(box_location) :- 
+describe(shed) :- 
         write('You are in a small shed near the entrance.'), nl,
         write('There are some chests here, but you don''t care. You are not a chest mage.'), !, nl.
+
+describe(confused_rat) :-
+        write('> Confused rat says: "Squeak! These two courtyards look nearly the same... It''s so confusing!"'), !, nl.
+
+describe(curious_rat) :-
+        write('> Curious rat says: "Squeak! I wonder what makes the stone bowls shine?"'), !, nl.
+
+describe(room_south) :- 
+        write('You are in a small courtyard. You are surrounded by flower beds,'), nl,
+        write('but the most eye-catching feature is the large fountain in the center.'), !, nl.
+
+describe(room_north) :- 
+        write('You are in another small courtyard. It looks strangely familiar.'), nl,
+        write('The richly decorated fountain in the center seems to have been unused for a long time.'), !, nl.
 
 describe(X) :- write('It looks like... a '), write(X), write('.'), !, nl.
 
 /* ---------- Take item ---------- */
 take(red_orb) :-
-        i_am_at(box_location),
+        i_am_at(shed),
         at(red_orb, box),
         retractall(at(red_orb, box)),
         assert(in_inventory(red_orb)),
@@ -147,7 +186,7 @@ take(red_orb) :-
         write('The bowl stops to shine. Maybe you did something wrong...'), !, nl.
 
 take(blue_orb) :-
-        i_am_at(box_location),
+        i_am_at(shed),
         at(blue_orb, blue_bowl),
         \+ wet(blue_bowl),
         retractall(at(blue_orb, blue_bowl)),
@@ -206,6 +245,9 @@ take(_) :-
 
 
 /* Inventory */
+inventory :-
+        i.
+
 i :-
         write('Brusto shows you the items that you collected: '), nl, fail.
 
@@ -216,10 +258,42 @@ i :-
 i :-
         write('*end of inventory*.').
 
-inventory :-
-        i.
-
 /* Use item on another object */
+
+use(scissors, rope) :-
+        in_inventory(scissors),
+        i_am_at(room_north),
+        not(cut(rope)),
+        assert(cut(rope)),
+        write('You cut the rope using scissors.'), nl,
+        write('Now it looks exactly like the rope in the south courtyard.'), 
+        check_solution, !, nl.
+
+use(scissors, rope) :-
+        in_inventory(scissors),
+        i_am_at(room_north),
+        cut(rope),
+        write('This rope is already cut.'), !, nl.
+
+use(scissors, cut_rope) :-
+        in_inventory(scissors),
+        i_am_at(room_south),
+        write('This rope is already cut.'), !, nl.
+
+use(X, rope) :-
+        in_inventory(X),
+        i_am_at(room_north),
+        write('Brusto says: "I don''t think we should hang the '),
+        ansi_format([bold,fg(magenta)], '~w', [X]),
+        write(' on the rope."'), !, nl.
+
+use(X, cut_rope) :-
+        in_inventory(X),
+        i_am_at(room_south),
+        write('Brusto says: "I don''t think we should hang the '),
+        ansi_format([bold,fg(magenta)], '~w', [X]),
+        write(' on the rope."'), !, nl.
+
 
 use(Item, Other) :-
         in_inventory(Item), immovable(Other),
@@ -250,7 +324,7 @@ use(red_orb, red_bowl) :-
         assert_shining(red_bowl), !, nl.   % Assert shining must be in the last line in this case.
 
 use(blue_orb, blue_bowl) :-
-        i_am_at(box_location),
+        i_am_at(shed),
         at(blue_orb, blue_bowl),
         write('It '),
         ansi_format([bold,fg(yellow)], 'shines', [_]),
@@ -296,6 +370,11 @@ go(w)  :-
         locked(gate),
         write('The gate is locked. You have to find a way to open it!'), !, nl.
 
+go(w)  :-
+        i_am_at(room_north),
+        locked(gateway),
+        write('This gateway is closed. You have to unlock it somehow...'), !, nl.
+
 go(Direction) :-
         i_am_at(Here),
         path(Here, Direction, There),
@@ -328,10 +407,12 @@ notice_objects_at(Place) :-
 
 notice_objects_at(_).
 
-examine(curious_rat) :-
-        i_am_at(box_location),
-        locked(gate),
-        write('> Curious rat says: "Squeak! I wonder what makes the stone bowls shine?"'), nl, fail.
+examine(Y) :-
+        i_am_at(Place),
+        at(X, Place),
+        at(Y, X),
+        describe(Y),
+        print_status(Y), !.
 
 examine(X) :-
         i_am_at(Place),
@@ -342,7 +423,7 @@ examine(X) :-
 
 examine(X) :-
         in_inventory(X),
-        write('You have this very magical artifact in your bottomless chest.'), !, nl.
+        write('You have this very magical artifact in your bottomless chest.'), print_status(X), !, nl.
 
 examine(_) :-
         write('You don''t sense the magic presence of this object here.'), !, nl.
@@ -355,7 +436,14 @@ print_status(X) :-
         write('! It gives you a good feeling.'), nl, fail.
 
 print_status(X) :-
-        locked(X), write('The '), write(X), write(' is locked.'), nl, fail.
+        locked(X), write('The '),
+        ansi_format([bold,fg(magenta)], '~w', [X]), write(' is'),
+        write(' locked.'), nl, fail.
+
+print_status(X) :-
+        cut(X), write('The '),
+        ansi_format([bold,fg(magenta)], '~w', [X]), write(' is'),
+        write(' cut.'), nl, fail.
 
 print_status(X) :-
         wet(X), write('The '), 
@@ -388,7 +476,7 @@ cast(_, Creature) :-
 
 /* rain spell section */
 cast(rain, blue_bowl) :-
-        i_am_at(box_location),
+        i_am_at(shed),
         retractall(hot(blue_bowl)),
         retractall(frozen(blue_bowl)),
         retractall(shining(blue_bowl)),         % In case the same spell is used multiple times.
@@ -415,6 +503,22 @@ cast(rain, red_bowl) :-
         assert(wet(red_bowl)),
         write('The water from the rain extinguishes the fire in the red bowl. It stops to shine.'), nl,
         write('Maybe you did something wrong...'), !, nl.
+
+cast(rain, torch) :-
+        i_am_at(Place),
+        at(X, Place),
+        at(torch, X),
+        hot(torch),
+        retractall(hot(torch)),
+        write('The torch is no longer lit.'), check_solution, !, nl.
+
+cast(rain, wooden_torch) :-
+        i_am_at(Place),
+        at(X, Place),
+        at(wooden_torch, X),
+        hot(wooden_torch),
+        retractall(hot(wooden_torch)),
+        write('The wooden_torch is no longer lit.'), check_solution, !, nl.
 
 cast(rain, X) :-
         i_am_at(Place),
@@ -459,8 +563,14 @@ cast(sunbeam, white_bowl) :-
         retractall(shining(white_bowl)),
         write('The white bowl stops to shine. Maybe you did something wrong...'), nl, fail.
 
+cast(sunbeam, rope) :-
+        i_am_at(room_north),
+        assert(cut(rope)),
+        write('The rope catches fire and after a while it is cut, or rather burned in two.'), 
+        check_solution, !, nl.
+
 cast(sunbeam, blue_bowl) :-
-        i_am_at(box_location),
+        i_am_at(shed),
         shining(blue_bowl),
         wet(blue_bowl),
         \+ at(blue_orb, blue_bowl),
@@ -468,6 +578,22 @@ cast(sunbeam, blue_bowl) :-
         retractall(wet(blue_bowl)),
         write('The water evaporates and the blue bowl stops to shine.'), nl,
         write('Maybe you did something wrong...'), !, nl.
+
+cast(sunbeam, torch) :-
+        i_am_at(Place),
+        at(X, Place),
+        at(torch, X),
+        assert(hot(torch)),
+        write('The torch is now'),
+        ansi_format([bold,fg(red)], ' lit.', [_]), check_solution, !, nl.
+
+cast(sunbeam, wooden_torch) :-
+        i_am_at(Place),
+        at(X, Place),
+        at(wooden_torch, X),
+        assert(hot(wooden_torch)),
+        write('The wooden torch is now'),
+        ansi_format([bold,fg(red)], ' lit.', [_]), check_solution, !, nl.
 
 cast(sunbeam, X) :-
         i_am_at(Place),
@@ -510,7 +636,7 @@ cast(frost, red_bowl) :-
         write('Maybe you did something wrong...'), !, nl.
 
 cast(frost, blue_bowl) :-
-        i_am_at(box_location),
+        i_am_at(shed),
         shining(blue_bowl),
         wet(blue_bowl),
         retractall(shining(blue_bowl)),
@@ -615,22 +741,118 @@ start :-
 
 /* Map */
 map :-
+        i_am_at(entrance),
         tty_clear,
         write('    _________________________^_^_^_^_^_^_^_^_^_'), nl,
-        write('   (~~~)       /       :    |                 |'), nl,
-        write('  (~~~~)      /        :    |  \\_/        [_] |'), nl,
-        write('  ( ~~~~)    [x]            |                 |'), nl,
-        write('( ~~~~~~)     |             |--------  -------|'), nl,
-        write('(~~~~~~~~)    |             |            \\_/  |'), nl,
-        write('  (~~~~~~~~)--|-----[ ]-----|                 |'), nl,
+        write('   (~~~)       /        :   |                 |'), nl,
+        write('  (~~~~)      /      _  :   |  \\_/        [_] |'), nl,
+        write('  ( ~~~~)    [x]    / \\    *|                 |'), nl,
+        write('( ~~~~~~)     |     \\_/     |-------   -------|'), nl,
+        write('(~~~~~~~~)    |             |                 |'), nl,
+        write('  (~~~~~~~~)--|-----   -----|            \\_/  |'), nl,
         write(' / (~~~~~~)   |             |                 |'), nl,
-        write('|     (~~~)   |             |      START      |'), nl,
-        write('|             |            [x]                |'), nl,
-        write('|             |             |                 |'), nl,
-        write('|             \\        :    |  \\_/       \\_/  |'), nl,
-        write('|              \\_______:____|_________________|'), nl,
+        write('|     (~~~)   |      _      |       '),
+        ansi_format([bold,fg(red)], '-O-', [_]),
+        write('       |'), nl,
+        write('|             |*    / \\    [x]                |'), nl,
+        write('|             |     \\_/     |                 |'), nl,
+        write('|             \\   :         |  \\_/       \\_/  |'), nl,
+        write('|              \\__:_________|_________________|'), nl,
         write('|                  |                       |'), nl,
         write('|                 [x]                      |'), nl,
         write(' \\_________________|___________[--]_______/'), nl,
         write('                               |  |'), nl,
-        write('     ~~ Gardens of Bloom ~~    |  |'), nl.
+        write('     ~~ Gardens of Bloom ~~    |  |'), !, nl.
+
+map :-
+        i_am_at(shed),
+        tty_clear,
+        write('    _________________________^_^_^_^_^_^_^_^_^_'), nl,
+        write('   (~~~)       /        :   |                 |'), nl,
+        write('  (~~~~)      /      _  :   |  \\_/        [_] |'), nl,
+        write('  ( ~~~~)    [x]    / \\    *|       '),
+        ansi_format([bold,fg(red)], '-O-', [_]),
+        write('       |'), nl,
+        write('( ~~~~~~)     |     \\_/     |-------   -------|'), nl,
+        write('(~~~~~~~~)    |             |                 |'), nl,
+        write('  (~~~~~~~~)--|-----   -----|            \\_/  |'), nl,
+        write(' / (~~~~~~)   |             |                 |'), nl,
+        write('|     (~~~)   |      _      |                 |'), nl,
+        write('|             |*    / \\    [x]                |'), nl,
+        write('|             |     \\_/     |                 |'), nl,
+        write('|             \\   :         |  \\_/       \\_/  |'), nl,
+        write('|              \\__:_________|_________________|'), nl,
+        write('|                  |                       |'), nl,
+        write('|                 [x]                      |'), nl,
+        write(' \\_________________|___________[--]_______/'), nl,
+        write('                               |  |'), nl,
+        write('     ~~ Gardens of Bloom ~~    |  |'), !, nl.
+
+map :-
+        i_am_at(room_south),
+        tty_clear,
+        write('    _________________________^_^_^_^_^_^_^_^_^_'), nl,
+        write('   (~~~)       /        :   |                 |'), nl,
+        write('  (~~~~)      /      _  :   |  \\_/        [_] |'), nl,
+        write('  ( ~~~~)    [x]    / \\    *|                 |'), nl,
+        write('( ~~~~~~)     |     \\_/     |-------   -------|'), nl,
+        write('(~~~~~~~~)    |             |                 |'), nl,
+        write('  (~~~~~~~~)--|-----   -----|            \\_/  |'), nl,
+        write(' / (~~~~~~)   |        '),
+        ansi_format([bold,fg(red)], '-O-', [_]),        
+        write('  |                 |'), nl,
+        write('|     (~~~)   |      _      |                 |'), nl,
+        write('|             |*    / \\    [x]                |'), nl,
+        write('|             |     \\_/     |                 |'), nl,
+        write('|             \\   :         |  \\_/       \\_/  |'), nl,
+        write('|              \\__:_________|_________________|'), nl,
+        write('|                  |                       |'), nl,
+        write('|                 [x]                      |'), nl,
+        write(' \\_________________|___________[--]_______/'), nl,
+        write('                               |  |'), nl,
+        write('     ~~ Gardens of Bloom ~~    |  |'), !, nl.
+
+map :-
+        i_am_at(room_north),
+        tty_clear,
+        write('    _________________________^_^_^_^_^_^_^_^_^_'), nl,
+        write('   (~~~)       /        :   |                 |'), nl,
+        write('  (~~~~)      /      _  :   |  \\_/        [_] |'), nl,
+        write('  ( ~~~~)    [x]    / \\    *|                 |'), nl,
+        write('( ~~~~~~)     |     \\_/     |-------   -------|'), nl,
+        write('(~~~~~~~~)    |  '),
+        ansi_format([bold,fg(red)], '-O-', [_]),   
+        write('        |                 |'), nl,
+        write('  (~~~~~~~~)--|-----   -----|            \\_/  |'), nl,
+        write(' / (~~~~~~)   |             |                 |'), nl,
+        write('|     (~~~)   |      _      |                 |'), nl,
+        write('|             |*    / \\    [x]                |'), nl,
+        write('|             |     \\_/     |                 |'), nl,
+        write('|             \\   :         |  \\_/       \\_/  |'), nl,
+        write('|              \\__:_________|_________________|'), nl,
+        write('|                  |                       |'), nl,
+        write('|                 [x]                      |'), nl,
+        write(' \\_________________|___________[--]_______/'), nl,
+        write('                               |  |'), nl,
+        write('     ~~ Gardens of Bloom ~~    |  |'), !, nl.
+
+map :-
+        tty_clear,
+        write('    _________________________^_^_^_^_^_^_^_^_^_'), nl,
+        write('   (~~~)       /        :   |                 |'), nl,
+        write('  (~~~~)      /      _  :   |  \\_/        [_] |'), nl,
+        write('  ( ~~~~)    [x]    / \\    *|                 |'), nl,
+        write('( ~~~~~~)     |     \\_/     |-------   -------|'), nl,
+        write('(~~~~~~~~)    |             |                 |'), nl,
+        write('  (~~~~~~~~)--|-----   -----|            \\_/  |'), nl,
+        write(' / (~~~~~~)   |             |                 |'), nl,
+        write('|     (~~~)   |      _      |                 |'), nl,
+        write('|             |*    / \\    [x]                |'), nl,
+        write('|             |     \\_/     |                 |'), nl,
+        write('|             \\   :         |  \\_/       \\_/  |'), nl,
+        write('|              \\__:_________|_________________|'), nl,
+        write('|                  |                       |'), nl,
+        write('|                 [x]                      |'), nl,
+        write(' \\_________________|___________[--]_______/'), nl,
+        write('                               |  |'), nl,
+        write('     ~~ Gardens of Bloom ~~    |  |'), !, nl.
