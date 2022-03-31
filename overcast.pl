@@ -108,7 +108,6 @@ fountains :-
         ((not(frozen(fountain)), not(wet(fountain))), 
         (not(frozen(fancy_fountain)), not(wet(fancy_fountain)))).
 
-
 check_solution :-
         locked(gateway),
         (i_am_at(room_north); i_am_at(room_south)),
@@ -565,7 +564,9 @@ cast(sunbeam, white_bowl) :-
 
 cast(sunbeam, rope) :-
         i_am_at(room_north),
+        not(cut(rope)),
         assert(cut(rope)),
+        assert(hot(rope)),
         write('The rope catches fire and after a while it is cut, or rather burned in two.'), 
         check_solution, !, nl.
 
