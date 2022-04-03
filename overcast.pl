@@ -7,10 +7,6 @@
 :- dynamic wet/1, frozen/1, hot/1.                       % Statuses from spells.
 :- discontiguous locked/1, alive/1, immovable/1, wet/1.  % To remove warnings.
 
-:- retractall(started).
-:- retractall(at(_, _)), retractall(i_am_at(_)), retractall(in_inventory(_)).
-:- retractall(wet(_)), retractall(frozen(_)), retractall(hot(_)).
-
 /* ----------------- Paths ----------------- */
 path(entrance, n, shed).
 path(shed, s, entrance).
@@ -108,7 +104,7 @@ locked(pond).
 immovable(pond).
 
 /* Room Z4 */
-immovable(guardian).
+alive(guardian).
 immovable(exit).
 
 /* --------- Puzzle mechanics --------- */
@@ -175,6 +171,9 @@ describe(confused_rat) :-
 
 describe(curious_rat) :-
         write('> Curious rat says: "Squeak! I wonder what makes the stone bowls shine?"'), !, nl.
+
+describe(valve) :-
+        write('It''s obviously connected with the fancy fountain.'), !, nl.
 
 describe(room_south) :- 
         write('You are in a small courtyard. You are surrounded by flower beds,'), nl,
@@ -364,6 +363,37 @@ use(X, cut_rope) :-
         ansi_format([bold,fg(magenta)], '~w', [X]),
         write(' on the rope."'), !, nl.
 
+% custom interactions for torches bcs i hate myself
+use(torch, wooden_torch) :-
+        in_inventory(torch),
+        i_am_at(Place),
+        at(X, Place),
+        at(wooden_torch, X),
+        (hot(wooden_torch); hot(torch)),
+        assert(hot(wooden_torch)), assert(hot(torch)),
+        write('Now both torches are burning.'), nl,
+        write('You put the torch back in the magic chest.'), !, nl.
+
+use(wooden_torch, torch) :-
+        in_inventory(wooden_torch),
+        i_am_at(Place),
+        at(X, Place),
+        at(torch, X),
+        (hot(wooden_torch); hot(torch)),
+        assert(hot(wooden_torch)), assert(hot(torch)),
+        write('Now both torches are burning.'), nl,
+        write('You put the wooden_torch back in the magic chest.'), !, nl.
+
+use(Item, Wet) :-
+        hot(Item), in_inventory(Item),
+        i_am_at(Place),
+        at(Wet, Place), wet(Wet),
+        retractall(hot(Item)),
+        write('The '),
+        ansi_format([bold,fg(magenta)], '~w', [Item]),
+        write(' is no longer burning.'), nl,
+        write('You put it back in the magic chest.'), !, nl.
+
 use(Item, Other) :-
         in_inventory(Item), immovable(Other),
         i_am_at(Place),
@@ -376,10 +406,10 @@ use(Item, Other) :-
         ansi_format([bold,fg(magenta)], '~w.', [Other]),
         nl, fail.
 
-use(torch, torch_holder) :- in_inventory(torch), i_am_at(room_north), check_solution, !.
-use(torch, wooden_torch_holder) :- in_inventory(torch), i_am_at(room_south), check_solution, !.
-use(wooden_torch, torch_holder) :- in_inventory(wooden_torch), i_am_at(room_north), check_solution, !.
-use(wooden_torch, wooden_torch_holder) :- in_inventory(wooden_torch), i_am_at(room_south), check_solution, !.
+use(torch, torch_holder) :- i_am_at(room_north), check_solution, !.
+use(torch, wooden_torch_holder) :- i_am_at(room_south), check_solution, !.
+use(wooden_torch, torch_holder) :- i_am_at(room_north), check_solution, !.
+use(wooden_torch, wooden_torch_holder) :- i_am_at(room_south), check_solution, !.
 
 use(green_orb, green_bowl) :-
         i_am_at(entrance),
@@ -901,7 +931,7 @@ map :-
         write('       |'), nl,
         write('|             |*    / \\    [x]                |'), nl,
         write('|             |     \\_/     |                 |'), nl,
-        write('|             \\   :         |  \\_/       \\_/  |'), nl,
+        write('|      ?      \\   :         |  \\_/       \\_/  |'), nl,
         write('|              \\__:_________|_________________|'), nl,
         write('|                                          |'), nl,
         write('|                                          |'), nl,
@@ -924,7 +954,7 @@ map :-
         write(' / (~~~~~~)   |             |                 |'), nl,
         write('|     (~~~)   |      _      |                 |'), nl,
         write('|             |*    / \\    [x]                |'), nl,
-        write('|             |     \\_/     |                 |'), nl,
+        write('|      ?      |     \\_/     |                 |'), nl,
         write('|             \\   :         |  \\_/       \\_/  |'), nl,
         write('|              \\__:_________|_________________|'), nl,
         write('|                                          |'), nl,
@@ -949,7 +979,7 @@ map :-
         write('|     (~~~)   |      _      |                 |'), nl,
         write('|             |*    / \\    [x]                |'), nl,
         write('|             |     \\_/     |                 |'), nl,
-        write('|             \\   :         |  \\_/       \\_/  |'), nl,
+        write('|      ?      \\   :         |  \\_/       \\_/  |'), nl,
         write('|              \\__:_________|_________________|'), nl,
         write('|                                          |'), nl,
         write('|                                          |'), nl,
@@ -973,7 +1003,7 @@ map :-
         write('|     (~~~)   |      _      |                 |'), nl,
         write('|             |*    / \\    [x]                |'), nl,
         write('|             |     \\_/     |                 |'), nl,
-        write('|             \\   :         |  \\_/       \\_/  |'), nl,
+        write('|      ?      \\   :         |  \\_/       \\_/  |'), nl,
         write('|              \\__:_________|_________________|'), nl,
         write('|                                          |'), nl,
         write('|                                          |'), nl,
@@ -997,7 +1027,7 @@ map :-
         write('|     (~~~)   |      _      |                 |'), nl,
         write('|             |*    / \\    [x]                |'), nl,
         write('|             |     \\_/     |                 |'), nl,
-        write('|             \\   :         |  \\_/       \\_/  |'), nl,
+        write('|      ?      \\   :         |  \\_/       \\_/  |'), nl,
         write('|              \\__:_________|_________________|'), nl,
         write('|                                          |'), nl,
         write('|                                          |'), nl,
@@ -1017,11 +1047,11 @@ map :-
         write(' / (~~~~~~)   |             |                 |'), nl,
         write('|     (~~~)   |      _      |                 |'), nl,
         write('|             |*    / \\    [x]                |'), nl,
-        write('|             |     \\_/     |                 |'), nl,
-        write('|             \\   :         |  \\_/       \\_/  |'), nl,
-        write('|              \\__:_________|_________________|'), nl,
-        write('|                                          |'), nl,
-        write('|                                          |'), nl,
+        write('|     #__#    |     \\_/     |                 |'), nl,
+        write('|    (o  o)   \\   :         |  \\_/       \\_/  |'), nl,
+        write('|     |vv|     \\__:_________|_________________|'), nl,
+        write('|    {    }                                |'), nl,
+        write('|     [][]                                 |'), nl,
         write(' \\_____________________________[--]_______/'), nl,
         write('                               |  |'), nl,
         write('     ~~ Gardens of Bloom ~~    |  |'), !, nl.
