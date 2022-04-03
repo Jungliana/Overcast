@@ -5,7 +5,7 @@
 :- dynamic i_am_at/1, at/2.
 :- dynamic in_inventory/1, locked/1, shining/1, alive/1.
 :- dynamic wet/1, frozen/1, hot/1.                       % Statuses from spells.
-:- discontiguous locked/1, alive/1, immovable/1, cut/1.  % To remove warnings.
+:- discontiguous locked/1, alive/1, immovable/1, wet/1.  % To remove warnings.
 
 :- retractall(started).
 :- retractall(at(_, _)), retractall(i_am_at(_)), retractall(in_inventory(_)).
@@ -103,6 +103,8 @@ immovable(gateway).
 locked(gateway).
 
 /* Room Z3 */
+wet(pond).
+locked(pond).
 immovable(pond).
 
 /* Room Z4 */
@@ -148,6 +150,11 @@ check_solution :-
         write(' opens, inviting you to enter the Gardens.'), !, nl.
 
 check_solution :-
+        ((frozen(pond), write(' Great! Now you can walk on (frozen) water!')) ; 
+        (at(long_plank, pond), write(' Great! Now you have a weakling-style makeshift bridge!'))),
+        retractall(locked(pond)), !, nl.
+
+check_solution :-  % pass quietly even if conditions not satisfied
         true.
 
 /* ------------- Bossfight mechanics ---------------- */
@@ -176,6 +183,14 @@ describe(room_south) :-
 describe(room_north) :- 
         write('You are in another small courtyard. It looks strangely familiar.'), nl,
         write('The richly decorated fountain in the center seems to have been unused for a long time.'), !, nl.
+
+describe(pond_room) :- 
+        write('There is a large pond in front of you.'), nl,
+        write('> Brusto says: "Bridges are for the weaklings!" and joyfully hovers over the water.'), nl,
+        write('It seems that you are the weakling and cannot pass, unless you find another way...'), !, nl.
+
+describe(pond) :- 
+        write('> Brusto says: "It''s definitely not a time for a bath."'), !, nl.
 
 describe(X) :- write('It looks like... a '), write(X), write('.'), !, nl.
 
@@ -306,9 +321,9 @@ use(valve) :-
 
 use(X) :-
         ((i_am_at(Place), at(X, Place)) ; in_inventory(X)),
-        write('> Brusto says: I don''t know what you''ve wanted to do with this '),
+        write('> Brusto says: "I don''t know what you''ve wanted to do with this '),
         ansi_format([bold,fg(magenta)], '~w', [X]), nl,
-        write('  but it definitely does NOTHING... at least on our plane of existence.'), !, nl.
+        write('  but it definitely does NOTHING... at least on our plane of existence."'), !, nl.
 
 use(_) :-
         write('You cannot do that.').
@@ -390,6 +405,11 @@ use(blue_orb, blue_bowl) :-
         write(' brightly!'), 
         assert_shining(blue_bowl), !, nl.    % Assert shining must be in the last line in this case.
 
+use(long_plank, pond) :-
+        i_am_at(pond_room),
+        at(long_plank, pond),
+        check_solution, !, nl.
+
 use(Item, Other) :-
         i_am_at(Place),
         at(Other, Place),
@@ -423,6 +443,12 @@ e :- go(e).
 w :- go(w).
 
 /* This rule tells how to move in a given direction. */
+
+go(s)  :-
+        i_am_at(pond_room),
+        locked(pond),
+        write('There''s no bridge here! You cannot fly (and probably'), nl, 
+        write('swim, that would be too convenient), so you cannot pass.'), !, nl.
 
 go(w)  :-
         i_am_at(entrance),
@@ -494,15 +520,23 @@ print_status(X) :-
         ansi_format([bold,fg(yellow)], ' shining', [_]),
         write('! It gives you a good feeling.'), nl, fail.
 
+print_status(pond) :-
+        write('The '),
+        ansi_format([bold,fg(magenta)], 'pond', [_]), write(' is'),
+        ansi_format([bold,fg(blue)], ' full of water', [_]), write('.'), nl, fail.
+
+print_status(pond) :-
+        locked(pond), write('It is impossible to cross. Unless you want to drown.'), nl, !.
+
 print_status(X) :-
         locked(X), write('The '),
-        ansi_format([bold,fg(magenta)], '~w', [X]), write(' is'),
-        write(' locked.'), nl, fail.
+        ansi_format([bold,fg(magenta)], '~w', [X]),
+        write(' is locked.'), nl, fail.
 
 print_status(X) :-
         cut(X), write('The '),
-        ansi_format([bold,fg(magenta)], '~w', [X]), write(' is'),
-        write(' cut.'), nl, fail.
+        ansi_format([bold,fg(magenta)], '~w', [X]),
+        write(' is cut.'), nl, fail.
 
 print_status(blue_bowl) :-
         wet(blue_bowl), write('The '), 
