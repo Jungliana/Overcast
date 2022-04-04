@@ -4,7 +4,7 @@
 :- dynamic started/0.
 :- dynamic i_am_at/1, at/2.
 :- dynamic in_inventory/1, locked/1, shining/1, alive/1.
-:- dynamic wet/1, frozen/1, hot/1.                       % Statuses from spells.
+:- dynamic wet/1, frozen/1, hot/1, vulnerable/1.         % Statuses from spells.
 :- discontiguous locked/1, alive/1, immovable/1, wet/1.  % To remove warnings.
 
 /* ----------------- Paths ----------------- */
@@ -105,6 +105,7 @@ immovable(pond).
 
 /* Room Z4 */
 alive(guardian).
+locked(exit).
 immovable(exit).
 
 /* --------- Puzzle mechanics --------- */
@@ -146,15 +147,51 @@ check_solution :-
         write(' opens, inviting you to enter the Gardens.'), !, nl.
 
 check_solution :-
+        not(shining(pond)), assert(shining(pond)),
         ((frozen(pond), write(' Great! Now you can walk on (frozen) water!')) ; 
         (at(long_plank, pond), write(' Great! Now you have a weakling-style makeshift bridge!'))),
         retractall(locked(pond)), !, nl.
+
+check_solution :-
+    nb_getval(value, BossHP),
+    BossHP =:= 0, retractall(at(guardian, boss_room)), retractall(locked(exit)), nl,
+    write('The Guardian growls and dissolves in the air!'), nl,
+    write('> Brusto (in total disbelief) says: "We did it!"'), !, nl.
 
 check_solution :-  % pass quietly even if conditions not satisfied
         true.
 
 /* ------------- Bossfight mechanics ---------------- */
 
+setup_boss :-
+        BossHP is 100,
+        nb_setval(value, BossHP),
+        assert(vulnerable(water)).
+
+set_next_vulnerability :-
+        Val is random(3),
+        ((Val =:= 0, assert(vulnerable(water)));
+        (Val =:= 1, assert(vulnerable(cold)));
+        (Val =:= 2, assert(vulnerable(sun)))).
+
+print_hp :-
+        nb_getval(value, BossHP),
+        write('Guardian''s HP: '), 
+        ansi_format([bold,fg(green)], '~w', [BossHP]), write('.'), !, nl.
+
+decrement_hp :-
+        nb_getval(value, BossHP),
+        HP is BossHP - 20,
+        nb_setval(value, HP),
+        write('Guardian''s HP: '), 
+        ansi_format([bold,fg(green)], '~w', [HP]), write('.'), !, nl.
+
+increment_hp :-
+        nb_getval(value, BossHP),
+        HP is BossHP + 20,
+        nb_setval(value, HP),
+        write('Guardian''s HP: '), 
+        ansi_format([bold,fg(green)], '~w', [HP]), write('.'), !, nl.
 
 /* --------- Describing places and objects ----------- */
 describe(entrance) :- 
@@ -190,6 +227,17 @@ describe(pond_room) :-
 
 describe(pond) :- 
         write('> Brusto says: "It''s definitely not a time for a bath."'), !, nl.
+
+describe(boss_room) :-
+        write('This part of the Gardens seems very quiet. You feel that you are almost there.'), nl,
+        write('But a giant beast stands in front of you.'), nl, nl,
+        write('   #__# '), nl,
+        write('  (o  o)'), nl,
+        write('   |vv| '), nl,
+        write('  {    }'), nl,
+        write('   [][] '), nl, nl,
+        write('> The Guardian says: "Only the wisest of mages can enter the Heart of Gardens."'), nl,
+        write('> Brusto says: "Now we fight... right?"'), !, nl.
 
 describe(X) :- write('It looks like... a '), write(X), write('.'), !, nl.
 
@@ -480,6 +528,11 @@ go(s)  :-
         write('There''s no bridge here! You cannot fly (and probably'), nl, 
         write('swim, that would be too convenient), so you cannot pass.'), !, nl.
 
+go(s)  :-
+        i_am_at(boss_room),
+        locked(exit),
+        write('The Guardian is blocking the exit!'), !, nl.
+
 go(w)  :-
         i_am_at(entrance),
         locked(gate),
@@ -567,6 +620,11 @@ print_status(X) :-
         cut(X), write('The '),
         ansi_format([bold,fg(magenta)], '~w', [X]),
         write(' is cut.'), nl, fail.
+
+print_status(guardian) :-
+        print_hp, vulnerable(X), write('The '), 
+        ansi_format([bold,fg(magenta)], 'Guardian', [_]), write(' is vulnerable to'),
+        ansi_format([bold,fg(yellow)], ' ~w', [X]), write('!'), !, nl.
 
 print_status(blue_bowl) :-
         wet(blue_bowl), write('The '), 
@@ -676,6 +734,18 @@ cast(rain, wooden_torch) :-
         retractall(hot(wooden_torch)),
         write('The wooden_torch is no longer lit.'), check_solution, !, nl.
 
+cast(rain, guardian) :-
+        vulnerable(water),
+        retractall(vulnerable(water)),
+        set_next_vulnerability,
+        decrement_hp,
+        check_solution, !.
+
+cast(rain, guardian) :-
+        not(vulnerable(water)),
+        write('> Brusto says: "Oh no! Rain doesn''t work!'), nl,
+        write('Maybe you should try something else!"'), !, nl.
+
 cast(rain, X) :-
         i_am_at(Place),
         at(X, Place),
@@ -769,6 +839,18 @@ cast(sunbeam, wooden_torch) :-
         write('The wooden torch is now'),
         ansi_format([bold,fg(red)], ' lit.', [_]), check_solution, !, nl.
 
+cast(sunbeam, guardian) :-
+        vulnerable(sun),
+        retractall(vulnerable(sun)),
+        set_next_vulnerability,
+        decrement_hp,
+        check_solution, !.
+
+cast(sunbeam, guardian) :-
+        not(vulnerable(sun)),
+        write('> Brusto says: "Oh no! Sunbeam doesn''t work!'), nl,
+        write('Maybe you should try something else!"'), !, nl.
+
 cast(sunbeam, X) :-
         i_am_at(Place),
         at(X, Place),
@@ -818,6 +900,18 @@ cast(frost, blue_bowl) :-
         assert(frozen(blue_bowl)),
         write('The water freezes and the blue bowl stops to shine.'), nl,
         write('Maybe you did something wrong...'), !, nl.
+
+cast(frost, guardian) :-
+        vulnerable(cold),
+        retractall(vulnerable(cold)),
+        set_next_vulnerability,
+        decrement_hp,
+        check_solution, !.
+
+cast(frost, guardian) :-
+        not(vulnerable(cold)),
+        write('> Brusto says: "Oh no! Frost doesn''t work!'), nl,
+        write('Maybe you should try something else!"'), !, nl.
 
 cast(frost, X) :-
         i_am_at(Place),
@@ -910,6 +1004,7 @@ start :-
 
 start :-
         assert(started),
+        setup_boss,
         introduction,
         assert(i_am_at(entrance)).
 
