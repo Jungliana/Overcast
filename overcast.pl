@@ -147,16 +147,17 @@ check_solution :-
         write(' opens, inviting you to enter the Gardens.'), !, nl.
 
 check_solution :-
-        not(shining(pond)), assert(shining(pond)),
+        not(shining(pond)),
         ((frozen(pond), write(' Great! Now you can walk on (frozen) water!')) ; 
         (at(long_plank, pond), write(' Great! Now you have a weakling-style makeshift bridge!'))),
-        retractall(locked(pond)), !, nl.
+        retractall(locked(pond)), assert(shining(pond)), !, nl.
 
-check_solution :-
-    nb_getval(value, BossHP),
-    BossHP =:= 0, retractall(at(guardian, boss_room)), retractall(locked(exit)), nl,
-    write('The Guardian growls and dissolves in the air!'), nl,
-    write('> Brusto (in total disbelief) says: "We did it!"'), !, nl.
+        check_solution :-
+        nb_getval(value, BossHP),
+        BossHP =:= 0, retractall(at(guardian, boss_room)), retractall(locked(exit)), nl,
+        write('The Guardian growls and dissolves in the air!'), nl,
+        write('> Brusto (in total disbelief) says: "We did it!"'), sleep(5),
+        outro, !, nl.
 
 check_solution :-  % pass quietly even if conditions not satisfied
         true.
@@ -230,7 +231,7 @@ describe(pond) :-
 
 describe(boss_room) :-
         write('This part of the Gardens seems very quiet. You feel that you are almost there.'), nl,
-        write('But a giant beast stands in front of you.'), nl, nl,
+        write('But a giant beast with two beaks and golden feathers stands in front of you.'), nl, nl,
         write('   #__# '), nl,
         write('  (o  o)'), nl,
         write('   |vv| '), nl,
@@ -238,6 +239,14 @@ describe(boss_room) :-
         write('   [][] '), nl, nl,
         write('> The Guardian says: "Only the wisest of mages can enter the Heart of Gardens."'), nl,
         write('> Brusto says: "Now we fight... right?"'), !, nl.
+
+describe(guardian) :-
+        write('A giant beast with two beaks and golden feathers stands in front of you.'), nl, nl,
+        write('   #__# '), nl,
+        write('  (o  o)'), nl,
+        write('   |vv| '), nl,
+        write('  {    }'), nl,
+        write('   [][] '), nl, !, nl.
 
 describe(X) :- write('It looks like... a '), write(X), write('.'), !, nl.
 
@@ -442,6 +451,16 @@ use(Item, Wet) :-
         write(' is no longer burning.'), nl,
         write('You put it back in the magic chest.'), !, nl.
 
+use(golden_ring, guardian) :-
+        in_inventory(golden_ring),
+        i_am_at(boss_room),
+        retractall(at(guardian, boss_room)), retractall(locked(exit)), nl, nl,
+        write('> The Guardian says: "Yes, this shiny object will match my beautiful feathers.'), nl,
+        write('Farewell, wise mage. You can move on to the Heart."'), nl,
+        write('> Brusto (in total disbelief) says: "We did it!"'), nl, sleep(5),
+        outro, !, nl.
+
+
 use(Item, Other) :-
         in_inventory(Item), immovable(Other),
         i_am_at(Place),
@@ -642,7 +661,7 @@ print_status(fancy_fountain) :-
         ansi_format([bold,fg(blue)], ' full of water', [_]), write('.'), !, nl.
 
 print_status(X) :-
-        wet(X), write('The '), 
+        not(i_am_at(pond_room)), wet(X), write('The '), 
         ansi_format([bold,fg(magenta)], '~w', [X]), write(' is'),
         ansi_format([bold,fg(blue)], ' wet', [_]), write('.'), !, nl.
 
@@ -1007,6 +1026,33 @@ start :-
         setup_boss,
         introduction,
         assert(i_am_at(entrance)).
+
+outro :-
+        tty_clear, sleep(2),
+        write('You make your way through a huge field of colorful flowers to the exit.'), nl, sleep(2),
+        write('You feel you have reached your destination.'), nl, sleep(2),
+        write('The Heart of Gardens.'), nl, nl, sleep(2),
+        write('                     (&&&&&&#.                                                  '), nl,
+        write('                  #@@&,     %@@@@@/     .%@@@@@@@@@@@/                          '), nl,
+        write('                ,@@@            .%@@%. /@@(        *@@@,                        '), nl,
+        write('              /@@@(    ,#@@@@@(.   /@@@@%.           *%@@@/                     '), nl,
+        write('            .&@#   .#@@@%.  .%@@*   /&@&.               .(@@/                   '), nl,
+        write('            @@&   /@@#      ,#@@#    #@&                  .@@                   '), nl,
+        write('            @@*   .#@@@@@@@@@&*.                          .@@                   '), nl,
+        write('            @@*                                           .@@                   '), nl,
+        write('            @@*                                           /@@                   '), nl,
+        write('            (@@(                                         /@@,                   '), nl,
+        write('             .#@@/                                      *@@(  ,,,.              '), nl,
+        write('                #@&,                                  (@@&*,&@@&@@@&/.          '), nl,
+        write('                 .%@@/                              #@@#.  /@@.   .(@@%         '), nl,
+        write('      .(&@@@@@@@#  .%@@&(.                        ,&@@.     ,%@@%   .@@/        '), nl,
+        write('      (@@     #@&     .,%@@&,                 ,%@@@@*                @@/        '), nl,
+        write('     *@@*    #@@(         ,@@@/            .#@@&,                  .&@&,        '), nl,
+        write('      (@@*              (@@@(%@@@@@&,    *@@@@@&,               ,&@@@(          '), nl,
+        write('       %@@%,,,,,,,,(@@@@&#.       *%&@@@@&(   *&@@@@@@@%*(@@@@@@@%*             '), nl,
+        write('         /##########*                                  /##*   '), nl, nl, sleep(3),
+        write('Thank you for playing!'), nl, nl,
+        write('[Type `halt.` to exit.]'), !, nl.
 
 
 /* Map */
