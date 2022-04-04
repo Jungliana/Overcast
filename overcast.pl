@@ -334,11 +334,8 @@ take(_) :-
         write('> Brusto says: "I don''t see it here."'),
         nl.
 
-
-
-/* Inventory */
-inventory :-
-        i.
+/* ----------- Inventory ------------ */
+inventory :- i.
 
 i :-
         write('Brusto shows you the items that you collected: '), nl, fail.
@@ -350,7 +347,7 @@ i :-
 i :-
         write('*end of inventory*.').
 
-/* Use one object */
+/* -------------- Use one object ---------------------- */
 
 use(curious_rat) :- describe(curious_rat), !.
 use(confused_rat) :- describe(confused_rat), !.
@@ -384,7 +381,7 @@ use(X) :-
 use(_) :-
         write('You cannot do that.').
 
-/* Use item on another object */
+/* -------------- Use item on another object ---------------------- */
 
 use(scissors, rope) :-
         in_inventory(scissors),
@@ -707,7 +704,7 @@ cast(_, Creature) :-
         alive(Creature),
         write('The '), write(Creature), write(' looks at you disapprovingly.'), nl, fail.
 
-/* rain spell section */
+/* --------- rain spell section -------------- */
 cast(rain, blue_bowl) :-
         i_am_at(shed),
         retractall(hot(blue_bowl)),
@@ -803,7 +800,7 @@ cast(rain, X) :-
         ansi_format([bold,fg(blue)], 'wet', [_]),
         write(' because of rain.'), !, nl.
 
-/* sunbeam spell section */
+/* ------------- sunbeam spell section ----------------- */
 cast(sunbeam, red_bowl) :-
         i_am_at(entrance),
         retractall(wet(red_bowl)),
@@ -891,7 +888,7 @@ cast(sunbeam, X) :-
         write('The '), write(X), write(' is now'),
         ansi_format([bold,fg(red)], ' hot.', [_]), !, nl.
 
-/* frost spell section */
+/* ---------------- frost spell section ---------------------- */
 cast(frost, white_bowl) :-
         i_am_at(entrance),
         retractall(shining(white_bowl)),        % In case the same spell is used multiple times.
@@ -948,23 +945,12 @@ cast(frost, X) :-
         ansi_format([bold,fg(cyan)], 'frozen.', [_]), check_solution, !, nl.
 
 
-/* wrong usage section */
+/* ---- wrong usage section ---- */
 cast(tp, _) :-
         write('Teleportation... coming soon in a DLC.'), !, nl.
 
 cast(_, _) :-
         write('It doesn''t work!'), !, nl.
-
-
-/* This rule tells how to die. */
-
-die :-
-        finish.
-
-/* Under UNIX, the "halt." command quits Prolog but does not
-   remove the output window. On a PC, however, the window
-   disappears before the final output can be seen. Hence this
-   routine requests the user to perform the final "halt." */
 
 finish :-
         nl,
@@ -991,6 +977,11 @@ introduction :-
         write('  --> the '),
         ansi_format([underline,fg(white)], 'white', [_]),
         write(' wand of frost'), nl, nl,
+        write('   *  ___________  *  '), nl,
+        write('     / (o)  (o)  \\   '), nl,
+        write('    /___________/|   '), nl,
+        write(' *  |   \\__/   | |  * '), nl,
+        write('    |__________|/    '), nl, nl,
         write('Your friend, Brusto the magical bottomless chest, looks at you expectantly. '), nl,
         write('For some reason, it says "true." every time you do something. Just ignore it.'), nl, nl,
         write('> Type `help.` for instructions. '), nl,
@@ -1054,8 +1045,7 @@ outro :-
         write('Thank you for playing!'), nl, nl,
         write('[Type `halt.` to exit.]'), !, nl.
 
-
-/* Map */
+/* ----------- Map --------------- */
 map :-
         i_am_at(entrance),
         tty_clear,
