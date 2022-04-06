@@ -19,7 +19,7 @@ path(pond_room, e, room_north).
 path(pond_room, s, boss_room).
 path(boss_room, n, pond_room).
 
-/* -------- Objects in locations -------- */
+/* ------------- Objects in locations ------------- */
 /* Room Z1 (entrance) */
 at(red_bowl, entrance).
 at(white_bowl, entrance).
@@ -56,15 +56,15 @@ at(gateway, room_north).
 at(pond, pond_room).
 
 /* Room Z4 (boss) */
-at(pond, boss_room).
 at(guardian, boss_room).
 at(exit, boss_room).
 
-/* ------- Objects' starting statuses ------------ */
+/* --------- Objects' starting statuses ------------ */
 % immovable - the player cannot take this item.
 % locked - it has to be unlocked somehow to proceed.
 % shining - on a good way to solve a puzzle.
 % alive - mostly rats.
+% cut - only for ropes.
 
 /* Room Z1 (entrance) */
 immovable(red_bowl).
@@ -81,7 +81,7 @@ immovable(blue_bowl).
 immovable(box).
 alive(curious_rat).
 
-/* Room Z2A */
+/* Room Z2A (south courtyard) */
 wet(fountain).
 immovable(fountain).
 immovable(wooden_torch_holder).
@@ -89,7 +89,7 @@ immovable(cut_rope).
 cut(cut_rope).
 alive(confused_rat).
 
-/* Room Z2B */
+/* Room Z2B (north courtyard) */
 hot(torch).
 immovable(fancy_fountain).
 immovable(torch_holder).
@@ -98,17 +98,17 @@ immovable(valve).
 immovable(gateway).
 locked(gateway).
 
-/* Room Z3 */
+/* Room Z3 (pond room) */
 wet(pond).
 locked(pond).
 immovable(pond).
 
-/* Room Z4 */
+/* Room Z4 (boss room) */
 alive(guardian).
 locked(exit).
 immovable(exit).
 
-/* --------- Puzzle mechanics --------- */
+/* ------------- Puzzle mechanics ------------- */
 assert_shining(X) :-
         \+ shining(X),
         assert(shining(X)),
@@ -162,8 +162,7 @@ check_solution :-
 check_solution :-  % pass quietly even if conditions not satisfied
         true.
 
-/* ------------- Bossfight mechanics ---------------- */
-
+/* ------------- Bossfight mechanics ------------- */
 setup_boss :-
         BossHP is 100,
         nb_setval(value, BossHP),
@@ -187,18 +186,56 @@ decrement_hp :-
         write('Guardian''s HP: '), 
         ansi_format([bold,fg(green)], '~w', [HP]), write('.'), !, nl.
 
-increment_hp :-
+increment_hp :-    % currently unused
         nb_getval(value, BossHP),
         HP is BossHP + 20,
         nb_setval(value, HP),
         write('Guardian''s HP: '), 
         ansi_format([bold,fg(green)], '~w', [HP]), write('.'), !, nl.
 
-/* --------- Describing places and objects ----------- */
+/* ----------- Describing places and objects ----------- */
 describe(entrance) :- 
         write('You are standing before an entrance gate to the Gardens.'), nl,
         write('The birds are chirping merrily. The wind plays with your hair gently.'), nl,
         write('> Brusto says: "What a nice day to die, isn''t it?"'), !, nl.
+
+describe(gate) :-
+        write('A huge gate guarding the entrance to the gardens.'), !, nl.
+
+describe(red_bowl) :-
+        write('A large red stone bowl.'), nl,
+        write('It is decorated with patterns resembling fire. '), !, nl.
+
+describe(blue_bowl) :-
+        write('A large blue stone bowl.'), nl,
+        write('It is decorated in a nautical theme.'), !, nl.
+
+describe(white_bowl) :-
+        write('A large white stone bowl.'), nl,
+        write('It is decorated with snowflake patterns.'), !, nl.
+
+describe(green_bowl) :-
+        write('A large green stone bowl.'), nl,
+        write('It is decorated with acanthus leaves.'), !, nl.
+
+describe(golden_ring) :-
+        write('A richly decorated ring made entirely of gold.'), nl,
+        write('It seems too big for a human finger.'), !, nl.
+
+describe(box) :-
+        write('A very outstanding box.'), !, nl.
+
+describe(red_orb) :-
+        write('A fiery looking red orb.'), nl,
+        write('Ingredients: 90% color magic, 10% glass.'), !, nl.
+
+describe(blue_orb) :-
+        write('A blue orb with water swirling inside.'), nl,
+        write('Ingredients: 90% color magic, 10% glass.'), !, nl.
+
+describe(green_orb) :-
+        write('A green orb covered with moss.'), nl,
+        write('Ingredients: 90% color magic, 10% glass.'), !, nl.
 
 describe(shed) :- 
         write('You are in a small shed near the entrance.'), nl,
@@ -210,8 +247,23 @@ describe(confused_rat) :-
 describe(curious_rat) :-
         write('> Curious rat says: "Squeak! I wonder what makes the stone bowls shine?"'), !, nl.
 
+describe(fountain) :-
+        write('A typical fountain you would expect in a magic garden.'), !, nl.
+
+describe(fancy_fountain) :-
+        write('A typical fountain you would expect in a magic garden... but fancier!'), !, nl.
+
+describe(rope) :-
+        write('Thick rope attached to the fence.'), !, nl.
+
+describe(cut_rope) :-
+        write('Thick rope attached to the fence.'), !, nl.
+
+describe(scissors) :-
+        write('A pair of large scissors, most likely used for pruning branches.'), !, nl.
+
 describe(valve) :-
-        write('It''s obviously connected with the fancy fountain.'), !, nl.
+        write('A valve. It''s obviously connected with the fancy fountain.'), !, nl.
 
 describe(room_south) :- 
         write('You are in a small courtyard. You are surrounded by flower beds,'), nl,
@@ -250,13 +302,14 @@ describe(guardian) :-
 
 describe(X) :- write('It looks like... a '), write(X), write('.'), !, nl.
 
-/* ---------- Take item ---------- */
+/* ------------- Take item ------------- */
 take(red_orb) :-
         i_am_at(shed),
         at(red_orb, box),
         retractall(at(red_orb, box)),
         assert(in_inventory(red_orb)),
-        write('You take the fiery looking red orb from the box and put it to your bottomless flying chest.'), !, nl.
+        write('You take the fiery looking red orb from the box '), nl,
+        write('and put it to your bottomless flying chest.'), !, nl.
 
 take(green_orb) :-
         i_am_at(entrance),
@@ -264,7 +317,8 @@ take(green_orb) :-
         retractall(at(green_orb, green_bowl)),
         retractall(shining(green_bowl)),
         assert(in_inventory(green_orb)),
-        write('You take the green orb from the green bowl and put it to your bottomless flying chest.'), nl,
+        write('You take the green orb from the green bowl '), nl,
+        write('and put it to your bottomless flying chest.'), nl,
         write('The bowl stops to shine. Maybe you did something wrong...'), !, nl.
 
 take(red_orb) :-
@@ -274,7 +328,8 @@ take(red_orb) :-
         retractall(at(red_orb, red_bowl)),
         retractall(shining(red_bowl)),
         assert(in_inventory(red_orb)),
-        write('You take the red orb from the red bowl and put it to your bottomless flying chest.'), nl,
+        write('You take the red orb from the red bowl '), nl,
+        write('and put it to your bottomless flying chest.'), nl,
         write('The bowl stops to shine. Maybe you did something wrong...'), !, nl.
 
 take(blue_orb) :-
@@ -284,7 +339,8 @@ take(blue_orb) :-
         retractall(at(blue_orb, blue_bowl)),
         retractall(shining(blue_bowl)),
         assert(in_inventory(blue_orb)),
-        write('You take the blue orb from the blue bowl and put it to your bottomless flying chest.'), nl,
+        write('You take the blue orb from the blue bowl '), nl,
+        write('and put it to your bottomless flying chest.'), nl,
         write('The bowl stops to shine. Maybe you did something wrong...'), !, nl.
 
 take(Item) :-
@@ -313,26 +369,27 @@ take(golden_ring) :-
         assert(in_inventory(golden_ring)),
         write('Nice find!'), !, nl.
 
-take(X) :-
+take(Item) :-
         i_am_at(Place),
-        at(X, Place),
-        retractall(at(X, Place)),
-        assert(in_inventory(X)),
-        write('The '), write(X), write(' is now in your bottomless flying chest.'),
+        at(Item, Place),
+        retractall(at(Item, Place)),
+        assert(in_inventory(Item)),
+        write('The '), write(Item), 
+        write(' is now in your bottomless flying chest.'),
         !, nl.
 
-take(Y) :-              % Take an item that is nested in another item.
+take(Item) :-              % Take an item that is nested in another item.
         i_am_at(Place),
-        at(X, Place),
-        at(Y, X),
-        retractall(at(Y, X)),
-        assert(in_inventory(Y)),
-        write('The '), write(Y), write(' is now in your bottomless flying chest.'),
+        at(Container, Place),
+        at(Item, Container),
+        retractall(at(Item, Container)),
+        assert(in_inventory(Item)),
+        write('The '), write(Item), 
+        write(' is now in your bottomless flying chest.'),
         !, nl.
 
 take(_) :-
-        write('> Brusto says: "I don''t see it here."'),
-        nl.
+        write('> Brusto says: "I don''t sense it here. Maybe you can. But I don''t."'), nl.
 
 /* ----------- Inventory ------------ */
 inventory :- i.
@@ -348,9 +405,12 @@ i :-
         write('*end of inventory*.').
 
 /* -------------- Use one object ---------------------- */
-
+% Aliases for common actions
+use(gate) :- go(w), !.
+use(gateway) :- go(w), !.
 use(curious_rat) :- describe(curious_rat), !.
 use(confused_rat) :- describe(confused_rat), !.
+use(guardian) :- examine(guardian), !.
 
 use(valve) :-
         i_am_at(room_north),
@@ -372,16 +432,19 @@ use(valve) :-
         frozen(fancy_fountain),
         write('The water in the fancy fountain is frozen solid! Nothing happens.'), !, nl.
 
-use(X) :-
-        ((i_am_at(Place), at(X, Place)) ; in_inventory(X)),
+use(Item) :-
+        ((i_am_at(Place), at(Item, Place)) ; in_inventory(Item)),
         write('> Brusto says: "I don''t know what you''ve wanted to do with this '),
-        ansi_format([bold,fg(magenta)], '~w', [X]), nl,
+        ansi_format([bold,fg(magenta)], '~w', [Item]), nl,
         write('  but it definitely does NOTHING... at least on our plane of existence."'), !, nl.
 
 use(_) :-
-        write('You cannot do that.').
+        write('You cannot do that. And your magic won''t help.').
 
 /* -------------- Use item on another object ---------------------- */
+
+/* Usage without placing items */
+use(_, _) :- nl, fail.    % New line before every description
 
 use(scissors, rope) :-
         in_inventory(scissors),
@@ -403,60 +466,60 @@ use(scissors, cut_rope) :-
         i_am_at(room_south),
         write('This rope is already cut.'), !, nl.
 
-use(X, rope) :-
-        in_inventory(X),
+use(Item, rope) :-
+        in_inventory(Item),
         i_am_at(room_north),
         write('Brusto says: "I don''t think we should hang the '),
-        ansi_format([bold,fg(magenta)], '~w', [X]),
+        ansi_format([bold,fg(magenta)], '~w', [Item]),
         write(' on the rope."'), !, nl.
 
-use(X, cut_rope) :-
-        in_inventory(X),
+use(Item, cut_rope) :-
+        in_inventory(Item),
         i_am_at(room_south),
         write('Brusto says: "I don''t think we should hang the '),
-        ansi_format([bold,fg(magenta)], '~w', [X]),
+        ansi_format([bold,fg(magenta)], '~w', [Item]),
         write(' on the rope."'), !, nl.
 
-% custom interactions for torches bcs i hate myself
 use(torch, wooden_torch) :-
         in_inventory(torch),
         i_am_at(Place),
-        at(X, Place),
-        at(wooden_torch, X),
+        at(Container, Place),
+        at(wooden_torch, Container),
         (hot(wooden_torch); hot(torch)),
         assert(hot(wooden_torch)), assert(hot(torch)),
-        write('Now both torches are burning.'), nl,
+        write('Now both torches are '),
+        ansi_format([bold,fg(red)], 'burning.', [_]), nl,
         write('You put the torch back in the magic chest.'), !, nl.
 
 use(wooden_torch, torch) :-
         in_inventory(wooden_torch),
         i_am_at(Place),
-        at(X, Place),
-        at(torch, X),
+        at(Container, Place),
+        at(torch, Container),
         (hot(wooden_torch); hot(torch)),
         assert(hot(wooden_torch)), assert(hot(torch)),
-        write('Now both torches are burning.'), nl,
+        write('Now both torches are '),
+        ansi_format([bold,fg(red)], 'burning.', [_]), nl,
         write('You put the wooden_torch back in the magic chest.'), !, nl.
-
-use(Item, Wet) :-
-        hot(Item), in_inventory(Item),
-        i_am_at(Place),
-        at(Wet, Place), wet(Wet),
-        retractall(hot(Item)),
-        write('The '),
-        ansi_format([bold,fg(magenta)], '~w', [Item]),
-        write(' is no longer burning.'), nl,
-        write('You put it back in the magic chest.'), !, nl.
 
 use(golden_ring, guardian) :-
         in_inventory(golden_ring),
         i_am_at(boss_room),
         retractall(at(guardian, boss_room)), retractall(locked(exit)), nl, nl,
         write('> The Guardian says: "Yes, this shiny object will match my beautiful feathers.'), nl,
-        write('Farewell, wise mage. You can move on to the Heart."'), nl,
-        write('> Brusto (in total disbelief) says: "We did it!"'), nl, sleep(5),
+        write('  Farewell, wise mage. You can move on to the Heart."'), nl,
+        write('> Brusto (in total disbelief) says: "We did it!"'), nl, sleep(7),
         outro, !, nl.
 
+use(Item, Wet) :-
+        hot(Item), wet(Wet), 
+        in_inventory(Item),
+        i_am_at(Place), at(Wet, Place), 
+        retractall(hot(Item)),
+        write('The '),
+        ansi_format([bold,fg(magenta)], '~w', [Item]),
+        write(' is no longer burning.'), nl,
+        write('You put it back in the magic chest.'), !, nl.
 
 use(Item, Other) :-
         in_inventory(Item), immovable(Other),
@@ -470,18 +533,20 @@ use(Item, Other) :-
         ansi_format([bold,fg(magenta)], '~w.', [Other]),
         nl, fail.
 
+% Checking solution when placing a torch in a torch holder.
 use(torch, torch_holder) :- i_am_at(room_north), check_solution, !.
 use(torch, wooden_torch_holder) :- i_am_at(room_south), check_solution, !.
 use(wooden_torch, torch_holder) :- i_am_at(room_north), check_solution, !.
 use(wooden_torch, wooden_torch_holder) :- i_am_at(room_south), check_solution, !.
 
+/* Usage with placing items */
 use(green_orb, green_bowl) :-
         i_am_at(entrance),
         at(green_orb, green_bowl),
         write('It '),
         ansi_format([bold,fg(yellow)], 'shines', [_]),
         write(' brightly!'), 
-        assert_shining(green_bowl), !, nl.   % Assert shining must be in the last line in this case.
+        assert_shining(green_bowl), !, nl.   % Assert shining also checks solution.
 
 use(red_orb, red_bowl) :-
         i_am_at(entrance),
@@ -489,7 +554,7 @@ use(red_orb, red_bowl) :-
         write('It '),
         ansi_format([bold,fg(yellow)], 'shines', [_]),
         write(' brightly!'), 
-        assert_shining(red_bowl), !, nl.   % Assert shining must be in the last line in this case.
+        assert_shining(red_bowl), !, nl.   % Assert shining also checks solution.
 
 use(blue_orb, blue_bowl) :-
         i_am_at(shed),
@@ -497,7 +562,7 @@ use(blue_orb, blue_bowl) :-
         write('It '),
         ansi_format([bold,fg(yellow)], 'shines', [_]),
         write(' brightly!'), 
-        assert_shining(blue_bowl), !, nl.    % Assert shining must be in the last line in this case.
+        assert_shining(blue_bowl), !, nl.    % Assert shining also checks solution.
 
 use(long_plank, pond) :-
         i_am_at(pond_room),
@@ -508,26 +573,28 @@ use(Item, Other) :-
         i_am_at(Place),
         at(Other, Place),
         at(Item, Other),
-        write('Nothing seems to happen.'), !, nl.
+        write('Nothing seems to happen.'), nl, 
+        write('Maybe something happened in the pocket dimension in your pocket watch,'), nl,
+        write('but you don''t have your pocket watch with you now, so you can''t check.'), !, nl.
 
 use(Item, Other) :-
         in_inventory(Item),
         i_am_at(Place),
         at(Other, Place),
-        write('You can''t use it here!'), !, nl.
+        write('Nothing seems to happen.'), nl, 
+        write('Maybe something happened in the pocket dimension in your pocket watch,'), nl,
+        write('but you don''t have your pocket watch with you now, so you can''t check.'), !, nl.
 
 use(Item, _) :-
-        \+ in_inventory(Item),
-        write('You don''t have a '), write(Item), write(' in your inventory.'), !, nl.
+        not(in_inventory(Item)),
+        write('You don''t have a '), write(Item), write(' in your bottomless chest.'), !, nl.
 
 use(_, Other) :-
         i_am_at(Place),
         \+ at(Other, Place),
         write('You don''t sense a '), write(Other), write(' here.'), !, nl.
 
-
-/* These rules define the direction letters as calls to go/1. */
-
+/* -------------- Go to another room -------------- */
 n :- go(n).
 
 s :- go(s).
@@ -535,8 +602,6 @@ s :- go(s).
 e :- go(e).
 
 w :- go(w).
-
-/* This rule tells how to move in a given direction. */
 
 go(s)  :-
         i_am_at(pond_room),
@@ -567,20 +632,13 @@ go(Direction) :-
         !, tty_clear, look.
 
 go(_) :-
-        write('You can''t go that way.').
+        write('You can''t go that way. Why? It doesn''t matter, take no interest.').
 
-
-/* This rule tells how to look about you. */
-
+/* ------- Get a description of a place ------- */
 look :-
         i_am_at(Place),
-        describe(Place),
-        nl,
-        notice_objects_at(Place),
-        nl.
-
-/* These rules set up a loop to mention all the objects
-   in your vicinity. */
+        describe(Place), nl,
+        notice_objects_at(Place), nl.
 
 notice_objects_at(Place) :-
         at(X, Place),
@@ -591,28 +649,30 @@ notice_objects_at(Place) :-
 
 notice_objects_at(_).
 
-examine(Y) :-
+/* ------ Get a description of an object ------ */
+examine(Item) :-
         i_am_at(Place),
-        at(X, Place),
-        at(Y, X),
-        describe(Y),
-        print_status(Y), !.
+        at(Container, Place),
+        at(Item, Container),
+        nl, describe(Item),
+        print_status(Item), !.
 
-examine(X) :-
+examine(Item) :-
         i_am_at(Place),
-        at(X, Place),
-        describe(X),
-        notice_objects_at(X),
-        print_status(X), !.
+        at(Item, Place),
+        nl, describe(Item),
+        notice_objects_at(Item),
+        print_status(Item), !.
 
-examine(X) :-
-        in_inventory(X),
-        write('You have this very magical artifact in your bottomless chest.'), print_status(X), !, nl.
+examine(Item) :-
+        in_inventory(Item), nl, describe(Item),
+        write('You have this very magical artifact in your bottomless chest.'),
+        print_status(Item), !, nl.
 
 examine(_) :-
         write('You don''t sense the magic presence of this object here.'), !, nl.
 
-
+/* ------ Print all of X's statuses ------ */
 print_status(X) :-
         shining(X), write('The '),
         ansi_format([bold,fg(magenta)], '~w', [X]), write(' is'),
@@ -690,12 +750,11 @@ print_status(X) :-
 print_status(_) :-
         !, nl.
 
-/* ------- All spell casts -------- */
+/* ------------ All spell casts ------------ */
 rain(X) :- cast(rain, X).
 sunbeam(X) :- cast(sunbeam, X).
 frost(X) :- cast(frost, X).
 
-% Not sure whether necessary
 cast(_, X) :-
         in_inventory(X),
         write('> Brusto says: "You cannot use spells on items inside me!"'), !, nl.
@@ -704,7 +763,7 @@ cast(_, Creature) :-
         alive(Creature),
         write('The '), write(Creature), write(' looks at you disapprovingly.'), nl, fail.
 
-/* --------- rain spell section -------------- */
+/* ------------ Rain spell section ------------ */
 cast(rain, blue_bowl) :-
         i_am_at(shed),
         retractall(hot(blue_bowl)),
@@ -800,7 +859,7 @@ cast(rain, X) :-
         ansi_format([bold,fg(blue)], 'wet', [_]),
         write(' because of rain.'), !, nl.
 
-/* ------------- sunbeam spell section ----------------- */
+/* ------------- Sunbeam spell section ----------------- */
 cast(sunbeam, red_bowl) :-
         i_am_at(entrance),
         retractall(wet(red_bowl)),
@@ -888,7 +947,7 @@ cast(sunbeam, X) :-
         write('The '), write(X), write(' is now'),
         ansi_format([bold,fg(red)], ' hot.', [_]), !, nl.
 
-/* ---------------- frost spell section ---------------------- */
+/* ------------ Frost spell section ------------ */
 cast(frost, white_bowl) :-
         i_am_at(entrance),
         retractall(shining(white_bowl)),        % In case the same spell is used multiple times.
@@ -944,20 +1003,28 @@ cast(frost, X) :-
         write('The '), write(X), write(' is now '),
         ansi_format([bold,fg(cyan)], 'frozen.', [_]), check_solution, !, nl.
 
-
-/* ---- wrong usage section ---- */
+/* ------ Wrong spell usage section ------ */
 cast(tp, _) :-
-        write('Teleportation... coming soon in a DLC.'), !, nl.
+        write('Teleportation... coming soon as a DLC.'), !, nl.
 
 cast(_, _) :-
         write('It doesn''t work!'), !, nl.
 
-finish :-
-        nl,
-        write('The game is over. Please enter the "halt." command.'),
-        nl.
+cast(rain) :- write('[Jukebox] Now playing... "Sad piano for rainy days".'), nl.
+cast(sunbeam) :- write('[Jukebox] Now playing... "Energetic violin for sunny days".'), nl.
+cast(frost) :- write('[Jukebox] Now playing... "Piercing bass for chilly days".'), nl.
 
-/* This rule prints an introduction to the game. */
+/* ---------- Start of the game ---------- */
+start :-
+        started,
+        write('You''ve already started your trial, Vetero!'), !, nl.
+
+start :-
+        assert(started),
+        setup_boss,
+        introduction,
+        assert(i_am_at(entrance)).
+
 introduction :-
         tty_clear,
         write('--- Welcome to '),
@@ -987,8 +1054,7 @@ introduction :-
         write('> Type `help.` for instructions. '), nl,
         write('> Type `look.` to sense magical objects around you. '), nl.
 
-/* This rule just writes out game instructions. */
-
+/* ------------ Instructions ------------ */
 help :-
         instructions.
 
@@ -1002,22 +1068,13 @@ instructions :-
         write('> take(item).        -- to pick up an item and place it in your bottomless flying chest.'), nl,
         write('> i. inventory.      -- to view the contents of your bottomless flying chest.'), nl,
         write('> use(item, [other]) -- to use an object or use an item from your inventory on another object.'), nl,
-        write('> cast(rain/sunbeam/frost, object) -- to use one of your wands on the chosen object.'), nl,
+        write('> cast(rain/sunbeam/frost, object) -- to use one of your spells on the chosen object.'), nl,
         write('> map.               -- to show a map.'), nl,
         write('> help.              -- to see this message again.'), nl,
-        write('> halt.              -- to end the game and quit.'), nl,
+        write('> halt.              -- to end the game and quit.'), nl, 
         nl.
 
-start :-
-        started,
-        write('You''ve already started your trial, Vetero!'), !, nl.
-
-start :-
-        assert(started),
-        setup_boss,
-        introduction,
-        assert(i_am_at(entrance)).
-
+/* ------------ End of the game ------------ */
 outro :-
         tty_clear, sleep(2),
         write('You make your way through a huge field of colorful flowers to the exit.'), nl, sleep(2),
@@ -1045,7 +1102,12 @@ outro :-
         write('Thank you for playing!'), nl, nl,
         write('[Type `halt.` to exit.]'), !, nl.
 
-/* ----------- Map --------------- */
+finish :-
+        nl, write('The game is over. Please enter the "halt." command.'), nl.
+
+/* --------------- Map --------------- */
+% Different versions depending on where the player is.
+
 map :-
         i_am_at(entrance),
         tty_clear,
