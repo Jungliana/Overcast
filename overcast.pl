@@ -110,7 +110,7 @@ immovable(exit).
 
 /* ------------- Puzzle mechanics ------------- */
 assert_shining(X) :-
-        \+ shining(X),
+        not(shining(X)),
         assert(shining(X)),
         check_solution, !.
 
@@ -152,12 +152,12 @@ check_solution :-
         (at(long_plank, pond), write(' Great! Now you have a weakling-style makeshift bridge!'))),
         retractall(locked(pond)), assert(shining(pond)), !, nl.
 
-        check_solution :-
+check_solution :-
         nb_getval(value, BossHP),
         BossHP =:= 0, retractall(at(guardian, boss_room)), retractall(locked(exit)), nl,
         write('The Guardian growls and dissolves in the air!'), nl,
-        write('> Brusto (in total disbelief) says: "We did it!"'), sleep(5),
-        outro, !, nl.
+        write('> Brusto (in total disbelief) says: "We did it!"'), 
+        nl, sleep(4), outro, !, nl.
 
 check_solution :-  % pass quietly even if conditions not satisfied
         true.
@@ -293,7 +293,6 @@ describe(boss_room) :-
         write('> Brusto says: "Now we fight... right?"'), !, nl.
 
 describe(guardian) :-
-        write('A giant beast with two beaks and golden feathers stands in front of you.'), nl, nl,
         write('   #__# '), nl,
         write('  (o  o)'), nl,
         write('   |vv| '), nl,
@@ -324,7 +323,7 @@ take(green_orb) :-
 take(red_orb) :-
         i_am_at(entrance),
         at(red_orb, red_bowl),
-        \+ hot(red_bowl),
+        not(hot(red_bowl)),
         retractall(at(red_orb, red_bowl)),
         retractall(shining(red_bowl)),
         assert(in_inventory(red_orb)),
@@ -335,7 +334,7 @@ take(red_orb) :-
 take(blue_orb) :-
         i_am_at(shed),
         at(blue_orb, blue_bowl),
-        \+ wet(blue_bowl),
+        not(wet(blue_bowl)),
         retractall(at(blue_orb, blue_bowl)),
         retractall(shining(blue_bowl)),
         assert(in_inventory(blue_orb)),
@@ -508,7 +507,7 @@ use(golden_ring, guardian) :-
         retractall(at(guardian, boss_room)), retractall(locked(exit)), nl, nl,
         write('> The Guardian says: "Yes, this shiny object will match my beautiful feathers.'), nl,
         write('  Farewell, wise mage. You can move on to the Heart."'), nl,
-        write('> Brusto (in total disbelief) says: "We did it!"'), nl, sleep(7),
+        write('> Brusto (in total disbelief) says: "We did it!"'), nl, sleep(10),
         outro, !, nl.
 
 use(Item, Wet) :-
@@ -591,7 +590,7 @@ use(Item, _) :-
 
 use(_, Other) :-
         i_am_at(Place),
-        \+ at(Other, Place),
+        not(at(Other, Place)),
         write('You don''t sense a '), write(Other), write(' here.'), !, nl.
 
 /* -------------- Go to another room -------------- */
@@ -785,7 +784,7 @@ cast(rain, white_bowl) :-
 cast(rain, red_bowl) :-
         i_am_at(entrance),
         shining(red_bowl),
-        \+ at(red_orb, red_bowl),
+        not(at(red_orb, red_bowl)),
         hot(red_bowl),
         retractall(shining(red_bowl)),
         retractall(hot(red_bowl)),
@@ -892,7 +891,7 @@ cast(sunbeam, blue_bowl) :-
         i_am_at(shed),
         shining(blue_bowl),
         wet(blue_bowl),
-        \+ at(blue_orb, blue_bowl),
+        not(at(blue_orb, blue_bowl)),
         retractall(shining(blue_bowl)),
         retractall(wet(blue_bowl)),
         write('The water evaporates and the blue bowl stops to shine.'), nl,
@@ -1077,9 +1076,9 @@ instructions :-
 /* ------------ End of the game ------------ */
 outro :-
         tty_clear, sleep(2),
-        write('You make your way through a huge field of colorful flowers to the exit.'), nl, sleep(2),
-        write('You feel you have reached your destination.'), nl, sleep(2),
-        write('The Heart of Gardens.'), nl, nl, sleep(2),
+        write('You make your way through a huge field of colorful flowers to the exit.'), nl, sleep(3),
+        write('You feel you have reached your destination.'), nl, sleep(3),
+        write('The Heart of Gardens.'), nl, nl, sleep(4),
         write('                     (&&&&&&#.                                                  '), nl,
         write('                  #@@&,     %@@@@@/     .%@@@@@@@@@@@/                          '), nl,
         write('                ,@@@            .%@@%. /@@(        *@@@,                        '), nl,
