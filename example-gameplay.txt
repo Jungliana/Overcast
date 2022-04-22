@@ -1,0 +1,768 @@
+?- [overcast].
+true.
+
+?- start.
+--- Welcome to Overcast! You are Vetero, the Weather Mage.
+The time has come for your final trial - you must travel
+through the Gardens of Bloom, full of dangers and puzzles.
+You have three wands:
+  --> the blue wand of rain
+  --> the red wand of sunbeam
+  --> the white wand of frost
+
+   *  ___________  *
+     / (o)  (o)  \
+    /___________/|
+ *  |   \__/   | |  *
+    |__________|/
+
+Your friend, Brusto the magical bottomless chest, looks at you expectantly.
+For some reason, it says "true." every time you do something. Just ignore it.
+
+> Type `help.` for instructions.
+> Type `look.` to sense magical objects around you.
+true.
+
+?- help.
+Rules of the adventure:
+> start.             -- to start the game.
+> n.  s.  e.  w.     -- to go to another room in that direction.
+> look.              -- to sense magical objects around you.
+> examine(item).     -- to take a closer look at the item.
+> take(item).        -- to pick up an item and place it in your bottomless flying chest.
+> i. inventory.      -- to view the contents of your bottomless flying chest.
+> use(item, [other]) -- to use an object or use an item from your inventory on another object.
+> cast(rain/sunbeam/frost, object) -- to use one of your spells on the chosen object.
+> map.               -- to show a map.
+> help.              -- to see this message again.
+> halt.              -- to end the game and quit.
+
+true.
+
+?- start.
+> Brusto says: "You've already started your trial, Vetero!"
+true.
+
+?- look.
+You are standing before an entrance gate to the Gardens.
+The birds are chirping merrily. The wind plays with your hair gently.
+> Brusto says: "What a nice day to die, isn't it?"
+
+You sense a red_bowl here.
+You sense a white_bowl here.
+You sense a green_bowl here.
+You sense a golden_ring here.
+You sense a gate here.
+
+true.
+
+?- examine(white_bowl).
+
+A large white stone bowl.
+It is decorated with snowflake patterns.
+The white_bowl is shining! It gives you a good feeling.
+The white_bowl is frozen.
+true.
+
+?- examine(green_bowl).
+
+A large green stone bowl.
+It is decorated with acanthus leaves.
+You sense a green_orb here.
+The green_bowl is shining! It gives you a good feeling.
+
+true.
+
+?- take(green_orb).
+You take the green orb from the green bowl
+and put it to your bottomless flying chest.
+The bowl stops to shine. Maybe you did something wrong...
+true.
+
+?- examine(green_bowl).
+
+A large green stone bowl.
+It is decorated with acanthus leaves.
+
+true.
+
+?- use(green_orb, green_bowl).
+
+You place a green_orb in a green_bowl.
+It shines brightly!
+true.
+
+?- examine(red_bowl).
+
+A large red stone bowl.
+It is decorated with patterns resembling fire.
+You sense a blue_orb here.
+
+true.
+
+?- take(blue_orb).
+The blue_orb is now in your bottomless flying chest.
+true.
+
+?- examine(blue_orb).
+
+A blue orb with water swirling inside.
+Ingredients: 90% color magic, 10% glass.
+You have this very magical artifact in your bottomless chest.
+
+true.
+
+?- examine(golden_ring).
+
+A richly decorated ring made entirely of gold.
+It seems too big for a human finger.
+
+?- take(golden_ring).
+Nice find!
+true.
+
+?- take(golden_ring).
+> Brusto says: "This item is already in my stomach... I mean, storage!"
+true.
+
+?- take(watermelon).
+> Brusto says: "I don't sense it here. Maybe you can. But I don't."
+true.
+
+?- map.
+    _________________________^_^_^_^_^_^_^_^_^_
+   (~~~)       /        :   |                 |
+  (~~~~)      /      _  :   |  \_/        [_] |
+  ( ~~~~)    [x]    / \    *|                 |
+( ~~~~~~)     |     \_/     |-------   -------|
+(~~~~~~~~)    |             |                 |
+  (~~~~~~~~)--|-----   -----|            \_/  |
+ / (~~~~~~)   |             |                 |
+|     (~~~)   |      _      |       -O-       |
+|             |*    / \    [x]                |
+|             |     \_/     |                 |
+|      ?      \   :         |  \_/       \_/  |
+|              \__:_________|_________________|
+|                                          |
+|                                          |
+ \_____________________________[--]_______/
+                               |  |
+     ~~ Gardens of Bloom ~~    |  |
+true.
+
+?- w.
+The gate is locked. You have to find a way to open it!
+true.
+
+?- e.
+You can't go that way. Why? It doesn't matter, take no interest.
+true.
+
+?- n.
+You are in a small shed near the entrance.
+There are some chests here, but you don't care. You are not a chest mage.
+
+You sense a box here.
+You sense a blue_bowl here.
+You sense a curious_rat here.
+
+true.
+
+?- examine(curious_rat).
+
+> Curious rat says: "Squeak! I wonder what makes the stone bowls shine?"
+
+true.
+
+?- take(curious_rat).
+> Brusto says: "I don't want to store anything alive inside me..."
+true.
+
+?- cast(rain, curious_rat).
+The curious_rat looks at you disapprovingly.
+The curious_rat is wet because of rain.
+true.
+
+?- examine(box).
+
+A very outstanding box.
+You sense a red_orb here.
+
+true.
+
+?- take(red_orb).
+You take the fiery looking red orb from the box
+and put it to your bottomless flying chest.
+true.
+
+?- examine(blue_bowl).
+
+A large blue stone bowl.
+It is decorated in a nautical theme.
+
+true.
+
+?- cast(frost, blue_bowl).
+The blue_bowl is now frozen.
+true.
+
+?- examine(blue_bowl).
+
+A large blue stone bowl.
+It is decorated in a nautical theme.
+The blue_bowl is frozen.
+true.
+
+?- cast(sunbeam, blue_bowl).
+The blue_bowl is no longer frozen.
+true.
+
+?- cast(rain).
+[Jukebox] Now playing... "Sad piano for rainy days".
+true.
+
+?- cast(rain, blue_bowl).
+You cast a rain spell on the blue bowl.
+The bowl fills with rainwater and it starts to shine brightly.
+true.
+
+?- i.
+Brusto shows you the items that you collected:
+blue_orb, golden_ring, red_orb, *end of inventory*.
+true.
+
+?- use(blue_orb, blue_bowl).
+
+You place a blue_orb in a blue_bowl.
+It shines brightly!
+Nothing seems to happen.
+Maybe something happened in the pocket dimension in your pocket watch,
+but you don't have your pocket watch with you now, so you can't check.
+true.
+
+?- s.
+You are standing before an entrance gate to the Gardens.
+The birds are chirping merrily. The wind plays with your hair gently.
+> Brusto says: "What a nice day to die, isn't it?"
+
+You sense a red_bowl here.
+You sense a white_bowl here.
+You sense a green_bowl here.
+You sense a gate here.
+
+true.
+
+?- examine(red_bowl).
+
+A large red stone bowl.
+It is decorated with patterns resembling fire.
+
+true.
+
+?- cast(frost, red_bowl).
+The red_bowl is now frozen.
+true.
+
+?- use(red_orb, red_bowl).
+
+You place a red_orb in a red_bowl.
+It shines brightly!
+The gate opens, inviting you to enter the Gardens.
+
+true.
+
+?- use(gate).
+You are in a small courtyard. You are surrounded by flower beds,
+but the most eye-catching feature is the large fountain in the center.
+
+You sense a fountain here.
+You sense a wooden_torch_holder here.
+You sense a cut_rope here.
+You sense a scissors here.
+You sense a confused_rat here.
+
+true.
+
+?- examine(fountain).
+
+A typical fountain you would expect in a magic garden.
+The fountain is full of water.
+true.
+
+?- examine(wooden_torch_holder).
+
+A torch holder that can hold a burning torch.
+You sense a wooden_torch here.
+
+true.
+
+?- examine(wooden_torch).
+
+A regular old-fashioned wooden torch.
+
+true.
+
+?- take(wooden_torch).
+The wooden_torch is now in your bottomless flying chest.
+true.
+
+?- examine(cut_rope).
+
+Thick rope attached to the fence.
+The cut_rope is cut.
+
+true.
+
+?- take(fountain).
+> Brusto says: "This object is immovable, I can't take it!"
+true.
+
+?- examine(scissors).
+
+A pair of large scissors, most likely used for pruning branches.
+
+true.
+
+?- take(scissors).
+The scissors is now in your bottomless flying chest.
+true.
+
+?- use(confused_rat).
+> Confused rat says: "Squeak! These two courtyards look nearly the same... It's so confusing!"
+true.
+
+?- map.
+    _________________________^_^_^_^_^_^_^_^_^_
+   (~~~)       /        :   |                 |
+  (~~~~)      /      _  :   |  \_/        [_] |
+  ( ~~~~)    [x]    / \    *|                 |
+( ~~~~~~)     |     \_/     |-------   -------|
+(~~~~~~~~)    |             |                 |
+  (~~~~~~~~)--|-----   -----|            \_/  |
+ / (~~~~~~)   |        -O-  |                 |
+|     (~~~)   |      _      |                 |
+|             |*    / \    [x]                |
+|             |     \_/     |                 |
+|      ?      \   :         |  \_/       \_/  |
+|              \__:_________|_________________|
+|                                          |
+|                                          |
+ \_____________________________[--]_______/
+                               |  |
+     ~~ Gardens of Bloom ~~    |  |
+true.
+
+?- n.
+You are in another small courtyard. It looks strangely familiar.
+The richly decorated fountain in the center seems to have been unused for a long time.
+
+You sense a fancy_fountain here.
+You sense a torch_holder here.
+You sense a rope here.
+You sense a long_plank here.
+You sense a valve here.
+You sense a gateway here.
+
+true.
+
+?- examine(fancy_fountain).
+
+A typical fountain you would expect in a magic garden... but fancier!
+
+true.
+
+?- examine(valve).
+
+A valve. It's obviously connected with the fancy fountain.
+
+true.
+
+?- use(valve).
+You turn the valve and you see the fancy fountain fill with water.
+true.
+
+?- examine(fancy_fountain).
+
+A typical fountain you would expect in a magic garden... but fancier!
+The fancy fountain is full of water.
+true.
+
+?- cast(frost).
+[Jukebox] Now playing... "Piercing bass for chilly days".
+true.
+
+?- cast(frost, fancy_fountain).
+The fancy_fountain is now frozen.
+true.
+
+?- use(valve).
+The water in the fancy fountain is frozen solid! Nothing happens.
+true.
+
+?- cast(sunbeam, fancy_fountain).
+The water in the fancy fountain is no longer frozen.
+true.
+
+?- use(valve).
+You turn the valve and you see all the water draining from the fancy fountain.
+true.
+
+?- examine(fancy_fountain).
+
+A typical fountain you would expect in a magic garden... but fancier!
+
+true.
+
+?- cast(rain, fancy_fountain).
+The fancy fountain is full of water because of rain.
+true.
+
+?- examine(fancy_fountain).
+
+A typical fountain you would expect in a magic garden... but fancier!
+The fancy fountain is full of water.
+true.
+
+?- look.
+You are in another small courtyard. It looks strangely familiar.
+The richly decorated fountain in the center seems to have been unused for a long time.
+
+You sense a fancy_fountain here.
+You sense a torch_holder here.
+You sense a rope here.
+You sense a long_plank here.
+You sense a valve here.
+You sense a gateway here.
+
+true.
+
+?- examine(gateway).
+
+It looks like... a gateway.
+The gateway is locked.
+
+true.
+
+?- w.
+This gateway is closed. You have to unlock it somehow...
+true.
+
+?- examine(rope).
+
+Thick rope attached to the fence.
+
+true.
+
+?- cast(sunbeam, rope).
+The rope catches fire and after a while it is cut, or rather burned in two.
+Now it looks exactly like the rope in the south courtyard.
+true.
+
+?- use(scissors, rope).
+
+This rope is already cut.
+true.
+
+?- examine(torch_holder).
+
+A torch holder that can hold a burning torch.
+You sense a torch here.
+
+true.
+
+?- examine(torch).
+
+A regular old-fashioned wooden torch.
+The torch is burning.
+true.
+
+?- i.
+Brusto shows you the items that you collected:
+golden_ring, wooden_torch, scissors, *end of inventory*.
+true.
+
+?- use(wooden_torch, torch).
+
+Now both torches are burning.
+You put the wooden_torch back in the magic chest.
+true.
+
+?- s.
+You are in a small courtyard. You are surrounded by flower beds,
+but the most eye-catching feature is the large fountain in the center.
+
+You sense a fountain here.
+You sense a wooden_torch_holder here.
+You sense a cut_rope here.
+You sense a confused_rat here.
+
+true.
+
+?- use(wooden_torch, wooden_torch_holder).
+
+You place a wooden_torch in a wooden_torch_holder.
+
+Now the two courtyards look like mirror images of each other.
+The gateway opens so you can visit next part of the Gardens.
+true.
+
+?- n.
+You are in another small courtyard. It looks strangely familiar.
+The richly decorated fountain in the center seems to have been unused for a long time.
+
+You sense a fancy_fountain here.
+You sense a torch_holder here.
+You sense a rope here.
+You sense a long_plank here.
+You sense a valve here.
+You sense a gateway here.
+
+true.
+
+?- examine(long_plank).
+
+A long, solid wooden plank.
+
+true.
+
+?- take(long_plank).
+The long_plank is now in your bottomless flying chest.
+true.
+
+?- w.
+There is a large pond in front of you.
+> Brusto says: "Bridges are for the weaklings!" and joyfully hovers over the water.
+It seems that you are the weakling and cannot pass, unless you find another way...
+
+You sense a pond here.
+
+true.
+
+?- map.
+    _________________________^_^_^_^_^_^_^_^_^_
+   (~~~)       /        :   |                 |
+  (~~~~)  -O- /      _  :   |  \_/        [_] |
+  ( ~~~~)    [x]    / \    *|                 |
+( ~~~~~~)     |     \_/     |-------   -------|
+(~~~~~~~~)    |             |                 |
+  (~~~~~~~~)--|-----   -----|            \_/  |
+ / (~~~~~~)   |             |                 |
+|     (~~~)   |      _      |                 |
+|             |*    / \    [x]                |
+|             |     \_/     |                 |
+|      ?      \   :         |  \_/       \_/  |
+|              \__:_________|_________________|
+|                                          |
+|                                          |
+ \_____________________________[--]_______/
+                               |  |
+     ~~ Gardens of Bloom ~~    |  |
+true.
+
+?- s.
+There's no bridge here! You cannot fly (and probably
+swim, that would be too convenient), so you cannot pass.
+true.
+
+?- examine(pond).
+
+> Brusto says: "It's definitely not a time for a bath."
+The pond is full of water.
+It is impossible to cross. Unless you want to drown.
+true.
+
+?- use(golden_ring, pond).
+
+You place a golden_ring in a pond.
+Nothing seems to happen.
+Maybe something happened in the pocket dimension in your pocket watch,
+but you don't have your pocket watch with you now, so you can't check.
+true.
+
+?- examine(pond).
+
+> Brusto says: "It's definitely not a time for a bath."
+You sense a golden_ring here.
+The pond is full of water.
+It is impossible to cross. Unless you want to drown.
+true.
+
+?- take(golden_ring).
+The golden_ring is now in your bottomless flying chest.
+true.
+
+?- cast(frost, pond).
+The pond is now frozen. Great! Now you can walk on (frozen) water!
+
+true.
+
+?- use(pond).
+> Brusto says: "I don't know what you've wanted to do with this pond
+  but it definitely does NOTHING... at least on our plane of existence."
+true.
+
+?- s.
+This part of the Gardens seems very quiet. You feel that you are almost there.
+But a giant beast with two beaks and golden feathers stands in front of you.
+
+   #__#
+  (o  o)
+   |vv|
+  {    }
+   [][]
+
+> The Guardian says: "Only the wisest of mages can enter the Heart of Gardens."
+> Brusto says: "Now we fight... right?"
+
+You sense a guardian here.
+You sense a exit here.
+
+true.
+
+?- examine(exit).
+
+> Brusto says: "Close(d) enough."
+The exit is locked.
+
+true.
+
+?- map.
+    _________________________^_^_^_^_^_^_^_^_^_
+   (~~~)       /        :   |                 |
+  (~~~~)      /      _  :   |  \_/        [_] |
+  ( ~~~~)    [x]    / \    *|                 |
+( ~~~~~~)     |     \_/     |-------   -------|
+(~~~~~~~~)    |             |                 |
+  (~~~~~~~~)--|-----   -----|            \_/  |
+ / (~~~~~~)   |             |                 |
+|     (~~~)   |      _      |                 |
+|             |*    / \    [x]                |
+|     #__#    |     \_/     |                 |
+|    (o  o)   \   :         |  \_/       \_/  |
+|     |vv|     \__:_________|_________________|
+|    {    }                                |
+|     [][]                                 |
+ \_____________________________[--]_______/
+                               |  |
+     ~~ Gardens of Bloom ~~    |  |
+true.
+
+?- s.
+The Guardian is blocking the exit!
+true.
+
+?- examine(guardian).
+
+   #__#
+  (o  o)
+   |vv|
+  {    }
+   [][]
+
+Guardian's HP: 100.
+The Guardian is vulnerable to water!
+true.
+
+?- cast(rain, guardian).
+The guardian looks at you disapprovingly.
+Guardian's HP: 80.
+true.
+
+?- cast(rain, guardian).
+The guardian looks at you disapprovingly.
+> Brusto says: "Oh no! Rain doesn't work!
+Maybe you should try something else!"
+true.
+
+?- use(guardian).
+
+   #__#
+  (o  o)
+   |vv|
+  {    }
+   [][]
+
+Guardian's HP: 80.
+The Guardian is vulnerable to sun!
+true.
+
+?- cast(sunbeam, guardian).
+The guardian looks at you disapprovingly.
+Guardian's HP: 60.
+true.
+
+?- examine(guardian).
+
+   #__#
+  (o  o)
+   |vv|
+  {    }
+   [][]
+
+Guardian's HP: 60.
+The Guardian is vulnerable to sun!
+true.
+
+?- cast(sunbeam, guardian).
+The guardian looks at you disapprovingly.
+Guardian's HP: 40.
+true.
+
+?- cast(sunbeam, guardian).
+The guardian looks at you disapprovingly.
+> Brusto says: "Oh no! Sunbeam doesn't work!
+Maybe you should try something else!"
+true.
+
+?- cast(frost, guardian).
+The guardian looks at you disapprovingly.
+Guardian's HP: 20.
+true.
+
+?- examine(guardian).
+
+   #__#
+  (o  o)
+   |vv|
+  {    }
+   [][]
+
+Guardian's HP: 20.
+The Guardian is vulnerable to water!
+true.
+
+?- cast(rain, guardian).
+The guardian looks at you disapprovingly.
+Guardian's HP: 0.
+
+The Guardian growls and dissolves in the air!
+> Brusto (in total disbelief) says: "We did it!"
+You make your way through a huge field of colorful flowers to the exit.
+You feel you have reached your destination.
+The Heart of Gardens.
+
+                     (&&&&&&#.
+                  #@@&,     %@@@@@/     .%@@@@@@@@@@@/
+                ,@@@            .%@@%. /@@(        *@@@,
+              /@@@(    ,#@@@@@(.   /@@@@%.           *%@@@/
+            .&@#   .#@@@%.  .%@@*   /&@&.               .(@@/
+            @@&   /@@#      ,#@@#    #@&                  .@@
+            @@*   .#@@@@@@@@@&*.                          .@@
+            @@*                                           .@@
+            @@*                                           /@@
+            (@@(                                         /@@,
+             .#@@/                                      *@@(  ,,,.
+                #@&,                                  (@@&*,&@@&@@@&/.
+                 .%@@/                              #@@#.  /@@.   .(@@%
+      .(&@@@@@@@#  .%@@&(.                        ,&@@.     ,%@@%   .@@/
+      (@@     #@&     .,%@@&,                 ,%@@@@*                @@/
+     *@@*    #@@(         ,@@@/            .#@@&,                  .&@&,
+      (@@*              (@@@(%@@@@@&,    *@@@@@&,               ,&@@@(
+       %@@%,,,,,,,,(@@@@&#.       *%&@@@@&(   *&@@@@@@@%*(@@@@@@@%*
+         /##########*                                  /##*
+
+Thank you for playing!
+
+[Type `halt.` to exit.]
+
+true.
