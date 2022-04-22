@@ -1,4 +1,5 @@
-/* Overcast, by AAP. */
+/* Overcast, by Aleksandra Piekarzewicz,
+Przemysław Pąk, Maksym Nedashkivskyi. */
 
 /* ------------ Dynamic section --------------- */
 :- dynamic started/0.
@@ -259,11 +260,26 @@ describe(rope) :-
 describe(cut_rope) :-
         write('Thick rope attached to the fence.'), !, nl.
 
+describe(torch_holder) :-
+        write('A torch holder that can hold a burning torch.'), !, nl.
+
+describe(wooden_torch_holder) :-
+        write('A torch holder that can hold a burning torch.'), !, nl.
+
+describe(torch) :-
+        write('A regular old-fashioned wooden torch.'), !, nl.
+
+describe(wooden_torch) :-
+        write('A regular old-fashioned wooden torch.'), !, nl.
+
 describe(scissors) :-
         write('A pair of large scissors, most likely used for pruning branches.'), !, nl.
 
 describe(valve) :-
         write('A valve. It''s obviously connected with the fancy fountain.'), !, nl.
+
+describe(long_plank) :-
+        write('A long, solid wooden plank.'), !, nl.
 
 describe(room_south) :- 
         write('You are in a small courtyard. You are surrounded by flower beds,'), nl,
@@ -280,6 +296,9 @@ describe(pond_room) :-
 
 describe(pond) :- 
         write('> Brusto says: "It''s definitely not a time for a bath."'), !, nl.
+
+describe(exit) :-
+        write('> Brusto says: "Close(d) enough."'), !, nl.
 
 describe(boss_room) :-
         write('This part of the Gardens seems very quiet. You feel that you are almost there.'), nl,
@@ -571,7 +590,7 @@ use(long_plank, pond) :-
 use(Item, Other) :-
         i_am_at(Place),
         at(Other, Place),
-        at(Item, Other),
+        at(Item, Other), nl,
         write('Nothing seems to happen.'), nl, 
         write('Maybe something happened in the pocket dimension in your pocket watch,'), nl,
         write('but you don''t have your pocket watch with you now, so you can''t check.'), !, nl.
@@ -579,7 +598,7 @@ use(Item, Other) :-
 use(Item, Other) :-
         in_inventory(Item),
         i_am_at(Place),
-        at(Other, Place),
+        at(Other, Place), nl,
         write('Nothing seems to happen.'), nl, 
         write('Maybe something happened in the pocket dimension in your pocket watch,'), nl,
         write('but you don''t have your pocket watch with you now, so you can''t check.'), !, nl.
@@ -909,9 +928,23 @@ cast(sunbeam, wooden_torch) :-
         i_am_at(Place),
         at(X, Place),
         at(wooden_torch, X),
-        assert(hot(wooden_torch)),
+        assert(hot(wooden_torch)), nl,
         write('The wooden torch is now'),
         ansi_format([bold,fg(red)], ' lit.', [_]), check_solution, !, nl.
+
+cast(sunbeam, fancy_fountain) :-
+        i_am_at(room_north), frozen(fancy_fountain),
+        retractall(frozen(fancy_fountain)),
+        assert(wet(fancy_fountain)),
+        write('The water in the fancy fountain is no longer'),
+        ansi_format([bold,fg(cyan)], ' frozen.', [_]), check_solution, !, nl.
+
+cast(sunbeam, fountain) :-
+        i_am_at(room_south), frozen(fountain),
+        retractall(frozen(fountain)),
+        assert(wet(fountain)),
+        write('The water in the fountain is no longer'),
+        ansi_format([bold,fg(cyan)], ' frozen.', [_]), check_solution, !, nl.
 
 cast(sunbeam, guardian) :-
         vulnerable(sun),
@@ -924,6 +957,15 @@ cast(sunbeam, guardian) :-
         not(vulnerable(sun)),
         write('> Brusto says: "Oh no! Sunbeam doesn''t work!'), nl,
         write('Maybe you should try something else!"'), !, nl.
+
+cast(sunbeam, pond) :-
+        i_am_at(pond_room), frozen(pond),
+        retractall(frozen(pond)),
+        write('The water in the pond is no longer frozen.'), !, nl.
+
+cast(sunbeam, pond) :-                  % Cannot remove water from the pond.
+        i_am_at(pond_room),
+        write('The water in the pond is now hot.'), !, nl.
 
 cast(sunbeam, X) :-
         i_am_at(Place),
@@ -1016,7 +1058,7 @@ cast(frost) :- write('[Jukebox] Now playing... "Piercing bass for chilly days".'
 /* ---------- Start of the game ---------- */
 start :-
         started,
-        write('You''ve already started your trial, Vetero!'), !, nl.
+        write('> Brusto says: "You''ve already started your trial, Vetero!"'), !, nl.
 
 start :-
         assert(started),
