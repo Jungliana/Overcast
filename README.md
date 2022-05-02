@@ -1,6 +1,6 @@
-# PARP-game
+# Overcast
 
-Text adventure for PARP.
+#### Text adventure game written in Prolog.
 
 Welcome to ‘Overcast’! You are Vetero, the Weather Mage. 
 The time has come for your final trial - you must travel 
